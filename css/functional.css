@@ -1,0 +1,255 @@
+/* =============================================================================
+   COUCHE FONCTIONNELLE (application nuage_dsfr)
+   Verrous d'exploitation et masquages d'interface, repris verbatim du
+   theming_customcss historique. Fichier séparé de l'habillage DSFR :
+   cycle de vie distinct (ces sélecteurs, souvent positionnels, sont les
+   premiers à casser aux montées de version : « Check this still works at
+   every upgrade! »). Chargé en session uniquement (TemplateListener).
+   ========================================================================== */
+
+
+/*******
+  MENU
+*******/
+/* Removes the contacts menu from the header (composant social sans objet
+   sur Nuage ; réglait au passage un contraste icône sombre/fond sombre).
+   Id stable, vérifié dans core/templates/layout.user.php (stable32).
+   Retrait d'interface uniquement : l'endpoint reste servi. */
+#contactsmenu {
+  display: none !important;
+}
+
+/* Removes the photo app (menu d'icônes d'origine ; la nav textuelle
+   applique sa propre exclusion via EXCLUDED_APP_PATHS dans le JS) */
+#header .header-start .app-menu .app-menu__list .app-menu-entry:nth-child(2) {
+  display:none;
+}
+
+/* Removes the photo app */
+.app-menu a[href*="/index.php/apps/photos/"] {
+  display:none;
+}
+
+
+/*********
+  SHARES
+*********/
+
+/* [FLAG] Règle présente dans la version de mars du customcss, ABSENTE de
+   la version récente : perte volontaire (bug fédération résolu ?) ou
+   accidentelle ? Réactiver si le lien de partage interne pose toujours
+   problème en GlobalScale :
+.sharing-entry.sharing-entry__internal {
+  display: none !important;
+}
+*/
+
+
+/***********
+  TRASHBIN
+***********/
+
+/* Prevents the user from permanently deleting files on his own */
+html.ng-csp body#body-user div#content-vue.content.app-files main#app-content-vue.app-content.no-snapper div.files-list div.files-list__thead-overlay div.files-list__column.files-list__row-actions-batch div.action-items.action-item--tertiary button.button-vue.button-vue--size-normal.button-vue--icon-and-text.button-vue--vue-secondary.action-item.action-item--single.files-list__row-actions-batch-delete,
+html.ng-csp body#body-user div#content-vue.content.app-files main#app-content-vue.app-content.no-snapper div.files-list__header button.files-list__header-actions.button-vue.button-vue--size-normal.button-vue--text-only.button-vue--vue-tertiary.button-vue--tertiary.action-item.action-item--single {
+  display:none;
+}
+
+/* Adds a warning for users to know files in their trashbin are automatically purged after 40 days */
+html.ng-csp body#body-user div#content-vue.content.app-files main#app-content-vue.app-content.no-snapper div.files-list__header div.breadcrumb a[href*="/index.php/apps/files/trashbin"]:after {
+  content: "Les éléments de la corbeille sont restaurables pendant 40 jours, puis définitivement supprimés.";
+  display: block;
+  margin-top: 4px;
+  color: var(--color-text-maxcontrast);
+  border-radius: 4px;
+  font-weight: normal;
+  font-size: 0.85rem;
+  text-align: left;
+}
+html.ng-csp body#body-user div#content-vue.content.app-files main#app-content-vue.app-content.no-snapper div.files-list__header div.breadcrumb a[href*="/index.php/apps/files/trashbin"] .button-vue__wrapper {
+display:none;
+}
+
+
+/**************************
+SETTINGS: PERSONAL INFO
+**************************/
+
+/* Prevents users from changing their name or mail */
+#personal-settings .personal-settings-setting-box #account-property-displayname,
+#personal-settings .personal-settings-setting-box .email,
+#personal-settings .email div.email__actions-container div.email__actions.action-item.action-item--default-popover.action-item--tertiary div.v-popper.v-popper--theme-dropdown {
+  pointer-events: none;
+}
+
+/* Hides the profile visibility section */
+#app-content div.personal-settings-section,
+#app-content #personal-settings .personal-settings-setting-box.personal-settings-setting-box-profile {
+  display:none;
+}
+
+/* Check this still works at every upgrade! */
+/* Keeps only full name, language, local, first day of the week, about */
+/*5 full name*/
+#app-content #personal-settings .personal-settings-setting-box:nth-child(6), /*pronouns*/
+#app-content #personal-settings .personal-settings-setting-box:nth-child(7), /*email*/
+#app-content #personal-settings .personal-settings-setting-box:nth-child(8), /*phone number*/
+#app-content #personal-settings .personal-settings-setting-box:nth-child(9), /*location*/
+#app-content #personal-settings .personal-settings-setting-box:nth-child(10), /*birthday*/
+/*11 language*/
+/*12 local*/
+/*13 first day*/
+/*14 time zone*/
+#app-content #personal-settings .personal-settings-setting-box:nth-child(15), /*website*/
+#app-content #personal-settings .personal-settings-setting-box:nth-child(16), /*x*/
+#app-content #personal-settings .personal-settings-setting-box:nth-child(17), /*bluesky*/
+#app-content #personal-settings .personal-settings-setting-box:nth-child(18), /*fediverse*/
+#app-content #personal-settings .personal-settings-setting-box:nth-child(19), /*organization*/
+#app-content #personal-settings .personal-settings-setting-box:nth-child(20), /*role */
+#app-content #personal-settings .personal-settings-setting-box:nth-child(21) /*title*/{
+  display:none;
+}
+
+/* Hides the buttons to choose if shared locally or to all the federation */
+#app-content #personal-settings #vue-avatar-section .headerbar-label .federation-control,
+#app-content #personal-settings .personal-settings-setting-box .headerbar-label .federation-control,
+#app-content #personal-settings .personal-settings-setting-box .headerbar-label .button-vue__wrapper,
+#app-content #personal-settings .personal-settings-setting-box .checkbox-container {
+  display:none;
+}
+
+/* Hides the warning concerning the version */
+#body-settings #content.app-settings #app-content .section .warning {
+  display:none;
+}
+
+
+/*********************
+SETTINGS: SECURITY
+*********************/
+
+/* Hides the section to change the password */
+main#app-content div.settings-section.settings-section--limit-width #passwordform {
+  display:none;
+}
+#body-settings #app-content .settings-section:has(#passwordform) {
+  display: none;
+}
+
+/* Check this still works at every upgrade! */
+/* Hides the 2FA settings */
+#content #app-content #two-factor-auth {
+  display:none;
+}
+
+/* Hides the passwordless authentication */
+#content #app-content #security-webauthn {
+  display:none;
+}
+
+
+/**************************
+SETTINGS: NOTIFICATIONS
+**************************/
+
+/* Hides the parameter to call (app 'talk' not installed) */
+#app-content .settings-section.settings-section--limit-width span.checkbox-radio-switch.checkbox-radio-switch-checkbox:first-of-type + span.checkbox-radio-switch.checkbox-radio-switch-checkbox {
+  display: none;
+}
+
+/* Check this still works at every upgrade! */
+/* Hides the calendar, contact and tasks sections from the activity notifications (apps not installed) */
+table.activitysettings tbody:nth-child(4){
+  display: none;
+}
+
+
+/*******************************
+SETTINGS: MOBILE AND DESKTOP
+*******************************/
+
+/* Hides the calendar, contact, download macOS configuration profile */
+.settings-section a[href*="user-sync-calendars"] {
+  display: none !important;
+}
+.settings-section a[href*="user-sync-contacts"] {
+  display: none !important;
+}
+.settings-section a[href*="apple-provisioning.mobileconfig"] {
+  display: none !important;
+}
+
+
+/********************
+SETTINGS: SHARING
+********************/
+
+/* Hides the possibility to share on social medias */
+#content #app-content .settings-section.settings-section--limit-width .social-button {
+  display: none;
+}
+
+/* Hides the property transfer */
+#body-settings #content.app-settings #app-content #files-personal-settings.section {
+  display: none;
+}
+
+
+/*************************
+SETTINGS: AVAILABILITY
+*************************/
+
+/* Hides the whole section */
+#app-navigation ul li a[href*="/index.php/settings/user/availability"] {
+  display: none;
+}
+
+
+/*****************
+SETTINGS: FLOW
+*****************/
+
+/* Hides the whole section */
+#app-navigation ul li a[href*="index.php/settings/user/workflow"] {
+  display: none;
+}
+
+
+/*******************
+SETTINGS: OFFICE
+*******************/
+
+/* Hides the whole section */
+#app-navigation ul li a[href*="index.php/settings/user/richdocuments"] {
+  display: none;
+}
+
+
+/********************
+SETTINGS: PRIVACY
+********************/
+
+/* Check this still works at every upgrade! */
+/* Hide 'Who has access to your data?' section */
+#body-settings #content.app-settings #app-content .settings-section.access.settings-section--limit-width,
+#app-content div#themes:nth-child(4){
+  display:none;
+}
+
+/* Set France in red to improve visibility */
+g#fr {
+  fill: var(--color-primary) !important;
+}
+
+
+/********************
+SETTINGS: APPEARANCE
+********************/
+
+#body-settings #app-content .settings-section.background {
+  display: none;
+}
+
+#body-settings #app-content .settings-section:has(.primary-color__wrapper) {
+  display: none;
+}

@@ -1,0 +1,881 @@
+/* =============================================================================
+   HABILLAGE DSFR (application nuage_dsfr)
+   Version NC cible : 32.0.8 / 32.0.9
+   ========================================================================== */
+
+
+/*******************************************************************************
+  SECTION 1 : DSFR - POLICES (MARIANNE)
+*******************************************************************************/
+
+@font-face {
+  font-family: 'Marianne';
+  src: url('/themes/nuage/fonts/Marianne-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Marianne';
+  src: url('/themes/nuage/fonts/Marianne-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Marianne';
+  src: url('/themes/nuage/fonts/Marianne-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+
+/*******************************************************************************
+  SECTION 2 : COUCHE DE TOKENS + MAPPING NEXTCLOUD
+  2a. Tokens clairs (défaut)
+  2b. Surcharges sombres
+  2c. Mapping des variables Nextcloud -> tokens
+  Aucune couleur de thème en dur en dehors de cette section.
+*******************************************************************************/
+
+/* ---- 2a. TOKENS - THÈME CLAIR (défaut) ---- */
+body {
+  --dsfr-primary: #000091;
+  --dsfr-primary-hover: #1212ff;
+  --dsfr-primary-active: #2323ff;
+  --dsfr-on-primary: #ffffff;
+
+  --dsfr-primary-bg: #e3e3fd;
+  --dsfr-primary-bg-hover: #c1c1fb;
+  --dsfr-primary-bg-active: #adadf9;
+  --dsfr-primary-bg-subtle: #ececfe;
+  --dsfr-primary-muted: #cacafb;
+
+  --dsfr-bg-default: #ffffff;
+  --dsfr-bg-default-rgb: 255, 255, 255;
+  --dsfr-devise-pos: 0 calc(100% + 1.40625rem);   /* sprite : rendu noir */
+  --dsfr-bg-alt: #f6f6f6;
+  --dsfr-bg-contrast: #eeeeee;
+  --dsfr-bg-disabled: #e5e5e5;
+
+  --dsfr-text-title: #161616;
+  --dsfr-text: #161616;
+  --dsfr-text-mention: #666666;
+  --dsfr-text-disabled: #929292;
+
+  --dsfr-border-subtle: #e5e5e5;
+  --dsfr-border-med: #929292;
+  --dsfr-border-strong: #3a3a3a;
+
+  --dsfr-focus: #0a76f6;
+
+  --dsfr-shadow: 0 2px 6px 0 rgba(0, 0, 18, 0.16);
+}
+
+/* ---- 2b. TOKENS - THÈME SOMBRE (paires officielles clair-sombre) ----
+  Choix explicite de l'utilisateur (attribut posé par NC). */
+body[data-theme-dark],
+body[data-theme-dark-highcontrast] {
+  --dsfr-primary: #8585f6;
+  --dsfr-primary-hover: #b1b1f9;
+  --dsfr-primary-active: #c6c6fb;
+  --dsfr-on-primary: #161616;
+
+  --dsfr-primary-bg: #272747;
+  --dsfr-primary-bg-hover: #4a4a7d;
+  --dsfr-primary-bg-active: #5e5e90;
+  --dsfr-primary-bg-subtle: #21213f;
+  --dsfr-primary-muted: #272747;
+
+  --dsfr-bg-default: #161616;
+  --dsfr-bg-default-rgb: 22, 22, 22;
+  --dsfr-devise-pos: -1.96875rem 100%;             /* sprite : rendu blanc */
+  --dsfr-bg-alt: #1e1e1e;
+  --dsfr-bg-contrast: #242424;
+  --dsfr-bg-disabled: #2a2a2a;
+
+  --dsfr-text-title: #ffffff;
+  --dsfr-text: #cecece;
+  --dsfr-text-mention: #929292;
+  --dsfr-text-disabled: #666666;
+
+  --dsfr-border-subtle: #2a2a2a;
+  --dsfr-border-med: #666666;
+  --dsfr-border-strong: #cecece;
+
+  --dsfr-shadow: 0 2px 6px 0 rgba(0, 0, 0, 0.55);
+}
+
+/* thème « système » (aucun attribut) + OS en sombre. */
+@media (prefers-color-scheme: dark) {
+  body:not([data-theme-light]):not([data-theme-light-highcontrast]) {
+    --dsfr-primary: #8585f6;
+    --dsfr-primary-hover: #b1b1f9;
+    --dsfr-primary-active: #c6c6fb;
+    --dsfr-on-primary: #161616;
+    --dsfr-primary-bg: #272747;
+    --dsfr-primary-bg-hover: #4a4a7d;
+    --dsfr-primary-bg-active: #5e5e90;
+    --dsfr-primary-bg-subtle: #21213f;
+    --dsfr-primary-muted: #272747;
+    --dsfr-bg-default: #161616;
+    --dsfr-bg-default-rgb: 22, 22, 22;
+    --dsfr-devise-pos: -1.96875rem 100%;
+    --dsfr-bg-alt: #1e1e1e;
+    --dsfr-bg-contrast: #242424;
+    --dsfr-bg-disabled: #2a2a2a;
+    --dsfr-text-title: #ffffff;
+    --dsfr-text: #cecece;
+    --dsfr-text-mention: #929292;
+    --dsfr-text-disabled: #666666;
+    --dsfr-border-subtle: #2a2a2a;
+    --dsfr-border-med: #666666;
+    --dsfr-border-strong: #cecece;
+    --dsfr-shadow: 0 2px 6px 0 rgba(0, 0, 0, 0.55);
+  }
+}
+
+/* ---- 2c. MAPPING VARIABLES NEXTCLOUD -> TOKENS ---- */
+body {
+  --color-primary: var(--dsfr-primary) !important;
+  --color-primary-element: var(--dsfr-primary) !important;
+  --color-primary-element-hover: var(--dsfr-primary-hover) !important;
+  --color-primary-element-light: var(--dsfr-primary-bg) !important;
+  --color-primary-element-light-hover: var(--dsfr-primary-bg-hover) !important;
+  --color-primary-element-light-text: var(--dsfr-primary) !important;
+  --color-primary-element-text: var(--dsfr-on-primary) !important;
+
+  --color-main-text: var(--dsfr-text) !important;
+  --color-main-background: var(--dsfr-bg-default) !important;
+  /* Dérivées translucides : le serveur les fige sur son ":root" à partir
+     de -rgb, pour la sidebar en sombre. */
+  --color-main-background-rgb: var(--dsfr-bg-default-rgb) !important;
+  --color-main-background-translucent: rgba(var(--dsfr-bg-default-rgb), .97) !important;
+  --color-main-background-blur: rgba(var(--dsfr-bg-default-rgb), .8) !important;
+  --color-background-dark: var(--dsfr-bg-alt) !important;
+  --color-background-darker: var(--dsfr-bg-contrast) !important;
+  --color-background-hover: var(--dsfr-bg-alt) !important;
+
+  --color-error: #ce0500 !important;
+  --color-warning: #b34000 !important;
+  --color-success: #18753c !important;
+
+  --header-height: 96px !important;
+}
+
+/* ---- 2d. INVARIANTS NON CHROMATIQUES -> :root ----
+   Le serveur (apps/theming, DefaultTheme.php) définit
+   sur :root :
+     --body-height: calc(100% - env(safe-area-inset-bottom)
+                          - var(--header-height) - var(--body-container-margin))
+   Une variable qui en référence une autre se fige sur l'élément où elle
+   est déclarée : cette dérivée est donc figée avec le --header-height de
+   :root. Déclarer notre hauteur d'en-tête sur body la rendrait invisible
+   à ce calcul (contenu dimensionné pour 50px mais décalé de 80px : bas de
+   page tronqué). Les invariants doivent vivre sur :root ; seuls les tokens
+   chromatiques vivent sur body (nécessité thèmes clair/sombre). */
+:root {
+  --font-face: 'Marianne', 'Segoe UI', system-ui, -apple-system,
+               'Liberation Sans', 'Helvetica Neue', Arial, sans-serif !important;
+  /* Rayons : dérogation au DSFR voulue, cohérence Mon Aide Numérique et suite ETNA.
+     Remettre à 0 les deux tokens suivants pour remettre un DSFR strict. */
+  --dsfr-radius: 0.375rem;
+  --dsfr-radius-lg: 0.625rem;
+  --border-radius: var(--dsfr-radius) !important;
+  --border-radius-large: var(--dsfr-radius-lg) !important;
+  --border-radius-element: var(--dsfr-radius) !important;
+
+  --body-container-radius: 0 !important;
+
+  /* Rangée 1 de l'en-tête. */
+  --header-height: 96px !important;
+}
+
+body#body-user,
+body#body-settings,
+body#body-public {
+  background-image: none !important;
+  background-color: var(--dsfr-bg-default) !important;
+}
+
+
+/*******************************************************************************
+  SECTION 3 : DSFR - PAGE DE CONNEXION
+*******************************************************************************/
+
+body#body-login {
+  background: #f5f5fe !important;
+  background-image: none !important;
+}
+
+body#body-login::before {
+  content: '';
+  display: block;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: linear-gradient(
+    to right,
+    #000091 0%, #000091 33.33%,
+    #ffffff 33.33%, #ffffff 66.66%,
+    #e1000f 66.66%, #e1000f 100%
+  );
+  z-index: 9999;
+}
+
+body#body-login .guest-box {
+  background: #ffffff !important;
+  border: 1px solid #dddddd !important;
+  border-radius: var(--dsfr-radius-lg) !important;
+  box-shadow: 0 2px 6px 0 rgba(0, 0, 18, 0.16) !important;
+  padding: 2rem !important;
+}
+
+body#body-login .guest-box h2,
+body#body-login .guest-box .login-form__headline {
+  color: #161616 !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.01em !important;
+}
+
+body#body-login .button-vue--vue-primary,
+body#body-login .login-form button[type="submit"],
+body#body-login input[type="submit"] {
+  background-color: #000091 !important;
+  border-color: #000091 !important;
+  border-radius: var(--dsfr-radius) !important;
+  color: #ffffff !important;
+  font-weight: 500 !important;
+  text-transform: none !important;
+  letter-spacing: normal !important;
+}
+body#body-login .button-vue--vue-primary:hover,
+body#body-login .login-form button[type="submit"]:hover,
+body#body-login input[type="submit"]:hover {
+  background-color: #1212ff !important;
+  border-color: #1212ff !important;
+}
+body#body-login .button-vue--vue-primary:active,
+body#body-login .login-form button[type="submit"]:active,
+body#body-login input[type="submit"]:active {
+  background-color: #2323ff !important;
+  border-color: #2323ff !important;
+}
+
+body#body-login input[type="text"],
+body#body-login input[type="password"],
+body#body-login .input-field input {
+  background: #eeeeee !important;
+  border: none !important;
+  border-radius: var(--dsfr-radius) var(--dsfr-radius) 0 0 !important;
+  box-shadow: inset 0 -2px 0 0 #3a3a3a !important;
+  color: #161616 !important;
+}
+body#body-login input[type="text"]:focus,
+body#body-login input[type="password"]:focus,
+body#body-login .input-field input:focus {
+  outline: 2px solid var(--dsfr-focus) !important;
+  outline-offset: 2px !important;
+}
+
+body#body-login footer,
+body#body-login .body-login-container footer {
+  color: #666666 !important;
+}
+body#body-login footer a,
+body#body-login .body-login-container footer a {
+  color: #000091 !important;
+}
+
+
+/*******************************************************************************
+  SECTION 4 : DSFR - EN-TETE (HEADER, rangée 1)
+*******************************************************************************/
+
+#header {
+  background: var(--dsfr-bg-default) !important;
+  border-bottom: 1px solid var(--dsfr-border-subtle) !important;
+  box-shadow: none !important;
+  height: var(--header-height) !important;
+  align-items: center !important;
+}
+
+#header .header-start,
+#header .header-end {
+  height: var(--header-height) !important;
+  align-items: center !important;
+}
+
+#header #nextcloud {
+  height: var(--header-height) !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+#header #nextcloud img {
+  height: calc(var(--header-height) - 1rem) !important;
+  width: auto !important;
+  max-width: none !important;
+  object-fit: contain !important;
+  object-position: left center !important;
+}
+#header #nextcloud .logo {
+  height: calc(var(--header-height) - 1rem) !important;
+  width: 232px !important;
+  background-size: contain !important;
+  background-position: left center !important;
+  background-repeat: no-repeat !important;
+}
+/* ---- BLOC-MARQUE TYPOGRAPHIQUE (js/dsfr-header.js) ----
+   Le fr-logo du DSFR est du HTML/CSS, pas une image : il suit
+   donc les thèmes nativement. */
+body.dsfr-brand-ready #header #nextcloud img,
+body.dsfr-brand-ready #header #nextcloud .logo {
+  display: none !important;
+}
+body.dsfr-brand-ready #header #nextcloud {
+  padding-inline-start: 0.75rem !important;
+  padding-block: 0 !important;   /* libère la hauteur pour le bloc complet */
+  background: none !important;
+  width: auto !important;
+}
+/* Fenêtre de construction JS : logo image masqué pour éviter une bascule */
+body:not(#body-login):not(.dsfr-brand-ready) #header #nextcloud img,
+body:not(#body-login):not(.dsfr-brand-ready) #header #nextcloud .logo {
+  opacity: 0;
+  animation: dsfr-logo-failopen 0.3s ease 2s forwards;
+}
+@keyframes dsfr-logo-failopen {
+  to { opacity: 1; }
+}
+
+/* ---- ARTWORK OFFICIEL, repris de dsfr.css v1.14 (.fr-logo--sm) ----
+   La Marianne est un SVG inline (data-URI) posé sur le dégradé bleu/rouge ;
+   la devise « Liberté Égalité Fraternité » est un sprite SVG à deux rendus
+   (noir et blanc) : le thème sombre ne fait que décaler la position. */
+.dsfr-brand {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.dsfr-brand__flag {
+  display: block;
+  width: 2.0625rem;
+  height: 0.75rem;
+  margin-bottom: 0.25rem;
+  background-size: 2.0625rem 0.84375rem, 2.0625rem 0.75rem, 0;
+  background-position: 0 -0.046875rem, 0 0, 0 0;
+  background-repeat: no-repeat, no-repeat, no-repeat;
+  background-image: url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 18'%3E%3Cpath fill='%23fff' d='M11.3 10.2c-.9.6-1.7 1.3-2.3 2.1v-.1c.4-.5.7-1 1-1.5.4-.2.7-.5 1-.8.5-.5 1-1 1.7-1.3.3-.1.5-.1.8 0-.1.1-.2.1-.4.2H13v-.1c-.3.3-.7.5-1 .9-.1.2-.2.6-.7.6 0 .1.1 0 0 0zm1.6 4.6c0-.1-.1 0-.2 0l-.1.1-.1.1-.2.2s.1.1.2 0l.1-.1c.1 0 .2-.1.2-.2.1 0 .1 0 .1-.1 0 .1 0 0 0 0zm-1.6-4.3c.1 0 .2 0 .2-.1s.1-.1.1-.1v-.1c-.2.1-.3.2-.3.3zm2.4 1.9s0-.1 0 0c.1-.1.2-.1.3-.1.7-.1 1.4-.3 2.1-.6-.8-.5-1.7-.9-2.6-1h.1c-.1-.1-.3-.1-.5-.2h.1c-.2-.1-.5-.1-.7-.2.1 0 .2-.2.2-.3h-.1c-.4.2-.6.5-.8.9.2.1.5 0 .7.1h-.3c-.1 0-.2.1-.2.2h.1c-.1 0-.1.1-.2.1.1.1.2 0 .4 0 0 .1.1.1.1.1-.1 0-.2.1-.3.3-.1.2-.2.2-.3.3v.1c-.3.2-.6.5-.9.8v.1c-.1.1-.2.1-.2.2v.1c.4-.1.6-.4 1-.5l.6-.3c.2 0 .3-.1.5-.1v.1h.2c0 .1-.2 0-.1.1s.3.1.4 0c.2-.2.3-.2.4-.2zM12.4 14c-.4.2-.9.2-1.2.4 0 0 0 .1-.1.1 0 0-.1 0-.1.1-.1 0-.1.1-.2.2l-.1.1s0 .1.1 0l.1-.1s-.1.1-.1.2V15.3l-.1.1s0 .1-.1.1l-.1.1.2-.2.1-.1h.2s0-.1.1-.1c.1-.1.2-.2.3-.2h.1c.1-.1.3-.1.4-.2.1-.1.2-.2.3-.2.2-.2.5-.3.8-.5-.1 0-.2-.1-.3-.1 0 .1-.2 0-.3 0zM30 9.7c-.1.2-.4.2-.6.3-.2.2 0 .4.1.5.1.3-.2.5-.4.5.1.1.2.1.2.1 0 .2.2.2.1.4s-.5.3-.3.5c.1.2.1.5 0 .7-.1.2-.3.4-.5.5-.2.1-.4.1-.6 0-.1 0-.1-.1-.2-.1-.5-.1-1-.2-1.5-.2-.1 0-.3.1-.4.1-.1.1-.3.2-.4.3l-.1.1c-.1.1-.2.2-.2.3-.1.2-.2.4-.2.6-.2.5-.2 1 0 1.4 0 0 1 .3 1.7.6.2.1.5.2.7.4l1.7 1H13.2l1.6-1c.6-.4 1.3-.7 2-1 .5-.2 1.1-.5 1.5-.9.2-.2.3-.4.5-.5.3-.4.6-.7 1-1l.3-.3s0-.1.1-.1c-.2.1-.2.2-.4.2 0 0-.1 0 0-.1s.2-.2.3-.2v-.1c-.4 0-.7.2-1 .5h-.2c-.5.2-.8.5-1.2.7v-.1c-.2.1-.4.2-.5.2-.2 0-.5.1-.8 0-.4 0-.7.1-1.1.2-.2.1-.4.1-.6.2v.1l-.2.2c-.2.1-.3.2-.5.4l-.5.5h-.1l.1-.1.1-.1c0-.1.1-.1.1-.2.2-.1.3-.3.5-.4 0 0-.1 0 0 0 0 0 0-.1.1-.1l-.1.1c-.1.1-.1.2-.2.2v-.1-.1l.2-.2c.1-.1.2-.1.3-.2h.1c-.2.1-.3.1-.5.2H14h-.1c0-.1.1-.1.2-.2h.1c1-.8 2.3-.6 3.4-1 .1-.1.2-.1.3-.2.1-.1.3-.2.5-.3.2-.2.4-.4.5-.7v-.1c-.4.4-.8.7-1.3 1-.6.2-1.3.4-2 .4 0-.1.1-.1.1-.1 0-.1.1-.1.1-.2h.1s0-.1.1-.1h.1c-.1-.1-.3.1-.4 0 .1-.1 0-.2.1-.2h.1s0-.1.1-.1c.5-.3.9-.5 1.3-.7-.1 0-.1.1-.2 0 .1 0 0-.1.1-.1.3-.1.6-.3.9-.4-.1 0-.2.1-.3 0 .1 0 .1-.1.2-.1v-.1h0c0-.1.1 0 .2-.1h-.1c.1-.1.2-.2.4-.2 0-.1-.1 0-.1-.1h.1-.5c-.1 0 0-.1 0-.1.1-.2.2-.5.3-.7h-.1c-.3.3-.8.5-1.2.6h-.2c-.2.1-.4.1-.5 0-.1-.1-.2-.2-.3-.2-.2-.1-.5-.3-.8-.4-.7-.2-1.5-.4-2.3-.3.3-.1.7-.2 1.1-.3.5-.2 1-.3 1.5-.3h-.3c-.4 0-.9.1-1.3.2-.3.1-.6.2-.9.2-.2.1-.3.2-.5.2v-.1c.3-.4.7-.7 1.1-.8.5-.1 1.1 0 1.6.1.4 0 .8.1 1.1.2.1 0 .2.2.3.3.2.1.4 0 .5.1v-.2c.1-.1.3 0 .4 0 .2-.2-.2-.4-.3-.6v-.1c.2.2.5.4.7.6.1.1.5.2.5 0-.2-.3-.4-.6-.7-.9v-.2c-.1 0-.1 0-.1-.1-.1-.1-.1-.2-.1-.3-.1-.2 0-.4-.1-.5-.1-.2-.1-.3-.1-.5-.1-.5-.2-1-.3-1.4-.1-.6.3-1 .6-1.5.2-.4.5-.7.8-1 .1-.4.3-.7.6-1 .3-.3.6-.5.9-.6.3-.1.5-.2.8-.3l2.5-.4H25l1.8.3c.1 0 .2 0 .2.1.1.1.3.2.4.2.2.1.4.3.6.5.1.1.2.3.1.4-.1.1-.1.4-.2.4-.2.1-.4.1-.6.1-.1 0-.2 0-.4-.1.5.2.9.4 1.2.8 0 .1.2.1.3.1v.1c-.1.1-.1.1-.1.2h.1c.1-.1.1-.4.3-.3.2.1.2.3.1.4-.1.1-.2.2-.4.3v.2c.1.1.1.2.2.4s.1.5.2.7c.1.5.2.9.2 1.4 0 .2-.1.5 0 .7l.3.6c.1.2.2.3.3.5.2.3.6.6.4 1zm-15.6 5.2c-.1 0-.1.1-.1.1s.1 0 .1-.1zm5.8-1.8c-.1.1 0 0 0 0zm-6.7-.2c0 .1.1 0 .1 0 .2-.1.5 0 .6-.2-.1-.1-.2 0-.2-.1-.1 0-.2 0-.2.1-.1.1-.3.1-.3.2z'/%3E%3Cpath fill='gray' d='M27.9 6.8c.1 0 .3 0 .3.1-.1.2-.4.3-.6.5h-.1c-.1.1-.1.2-.1.2h-.3c.1.1.3.2.5.2l.1.1h.2V8c-.1.1-.2.1-.4.1.2.1.5.1.7 0 .2-.1 0-.4.1-.5-.1 0 0-.1-.1-.1.1-.1.1-.2.2-.2s.1 0 .2-.1c0-.1-.1-.1-.1-.2.2-.1.3-.3.3-.5 0-.1-.3-.1-.4-.2h-.5c-.2 0-.3.1-.5.1l-.6.3c.2-.1.4-.1.7-.2 0 .3.2.3.4.3'/%3E%3C/svg%3E"), linear-gradient(90deg, #000091 0%, #000091 50%, #e1000f 50%, #e1000f 100%), linear-gradient(90deg, #000 0%, #000 100%);
+  forced-color-adjust: none;
+}
+.dsfr-brand__line {
+  display: block;
+  font-family: var(--font-face);
+  font-weight: 700;
+  font-size: 0.7875rem;
+  line-height: 1.0317460317em;
+  letter-spacing: -0.01em;
+  text-indent: -0.1em;
+  text-transform: uppercase;
+  color: var(--dsfr-text-title);
+}
+.dsfr-brand__devise {
+  display: block;
+  min-width: 1.96875rem;
+  padding-top: 1.65625rem;
+  background-size: 3.9375rem 2.8125rem;
+  background-position: var(--dsfr-devise-pos);
+  background-repeat: no-repeat;
+  background-image: url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 252 180'%3E%3Cdefs%3E%3Csymbol id='a' viewBox='0 0 11 15.5'%3E%3Cpath d='M10.4 5.3C11.9 1.5 10.1 0 7.9 0 4.2 0 0 6.5 0 11.7c0 2.5 1.2 3.8 3 3.8 2.1 0 4.3-2 6.2-5.5h-1c-1.2 1.5-2.6 2.6-3.9 2.6-1.3 0-2-.8-2-2.6a10.7 10.7 0 01.3-2.2zm-4-3.1c1.1 0 2 .8 1.5 2.6L3.1 6.1c.8-2.2 2.2-4 3.4-4z'/%3E%3C/symbol%3E%3Csymbol id='b' viewBox='0 0 12.4 21.8'%3E%3Cuse width='11' height='15.5' y='6.4' href='%23a'/%3E%3Cpath d='M7.9 4.7L12.4.6V0h-3L6.7 4.7H8z'/%3E%3C/symbol%3E%3Csymbol id='c' viewBox='0 0 11.5 19'%3E%3Cpath d='M1.7 5.7h2.6L.1 17.1a1.3 1.3 0 001.2 2c3 0 6.4-2.6 7.8-6.2h-.7a9.4 9.4 0 01-5.1 3.5L7 5.7H11l.5-1.6H7.7L9 0H7.6L4.9 4.1l-3.2.4v1.2z'/%3E%3C/symbol%3E%3Csymbol id='d' viewBox='0 0 9.8 21.9'%3E%3Cpath d='M7.6 8c.3-1-.4-1.6-1-1.6-2.2 0-5 2.1-6 5h.7A5.6 5.6 0 014.4 9L.1 20.3a1.1 1.1 0 001 1.6c2.2 0 4.7-2 5.8-5H6A5.6 5.6 0 013 19.5zM8 3.7a1.8 1.8 0 001.8-1.8A1.8 1.8 0 008 0a1.8 1.8 0 00-1.8 1.8A1.8 1.8 0 008 3.6'/%3E%3C/symbol%3E%3Csymbol id='e' viewBox='0 0 14.8 15.5'%3E%3Cpath d='M3.3 3.1c.7 0 1 1 0 3.4l-3 6.8c-.7 1.3 0 2.2 1.2 2.2a1.3 1.3 0 001.5-1l3-8C7.4 4.8 10 3 11 3s.8.6.3 1.6l-4.6 9a1.3 1.3 0 001.1 1.9c2.3 0 5-2 6-5h-.6A5.6 5.6 0 0110 13l4-8a6.1 6.1 0 00.8-2.8A2 2 0 0012.6 0c-2 0-3.6 2.2-6 5V2.8C6.6 1.4 6.1 0 4.8 0 3.2 0 1.8 2.5.7 4.9h.7c.7-1.1 1.3-1.8 2-1.8'/%3E%3C/symbol%3E%3Csymbol id='f' viewBox='0 0 12 15.5'%3E%3Cpath d='M11.8 3.5c.5-1.9.2-3.5-1.2-3.5-1.8 0-2.3 1.2-4 5V2.8C6.5 1.3 6 0 4.6 0 3.1 0 1.7 2.5.5 5h.8C2 3.7 2.8 3 3.3 3c.7 0 1 1 0 3.4l-3 6.8c-.7 1.3 0 2.1 1.2 2.1a1.3 1.3 0 001.5-1l3-8a50.3 50.3 0 012.6-3h3.2z'/%3E%3C/symbol%3E%3Csymbol id='g' viewBox='0 0 14.7 16.2'%3E%3Cpath d='M10.5 13.1c-.6 0-1-1 0-3.4L14.6.1 13.4 0l-1.3 1.3h-.3C6.1 1.3 0 8.6 0 14.2a2 2 0 002.1 2.1c1.7 0 3.3-2.4 5.2-5l-.1 1c-.3 2.6.6 4 2 4 1.5 0 3-2.4 4-4.9h-.7c-.7 1.1-1.5 1.8-2 1.8zM7.9 9.8c-1.3 1.6-3.4 3.5-4.3 3.5-.5 0-.9-.5-.9-1.6 0-3.5 4-8.2 6-8.2a4.2 4.2 0 011.4.2z'/%3E%3C/symbol%3E%3Csymbol id='h' viewBox='0 0 21.9 19.8'%3E%3Cpath d='M11.2 19.8l.3-.9c-3.8-.7-4.3-.7-2.7-4.8l1.4-3.9h3c1.9 0 1.9.9 1.6 3h1l2.6-6.9h-1c-1 1.6-1.8 2.9-3.8 2.9h-3l2-5.6c.8-2 1.1-2.4 3.7-2.4h.7c2.6 0 3 .7 3 3.5h1l.9-4.7H7.3L7 .9c3 .6 3.3.9 2 4.8L5.7 14c-1.5 3.9-2 4.2-5.5 4.8l-.3.9z'/%3E%3C/symbol%3E%3Csymbol id='i' viewBox='0 0 10.1 21.9'%3E%3Cpath d='M2.9 19.4L10.1.3 9.8 0l-5 .6v.6l1 .7c.9.7.6 1.3-.2 3.4L.2 19.9a1.3 1.3 0 001.1 2c2.3 0 4.7-2.1 5.8-5h-.7a6.5 6.5 0 01-3.5 2.5'/%3E%3C/symbol%3E%3Csymbol id='j' viewBox='0 0 18 22'%3E%3Cpath d='M18 .6h-4.3a3.8 3.8 0 00-2.1-.6A6.6 6.6 0 005 6.5a3.3 3.3 0 003 3.6c-1.9.8-3 1.8-3 2.9a1.7 1.7 0 00.9 1.5c-4.3 1.3-6 2.8-6 4.7 0 2 2.6 2.8 5.6 2.8 5.3 0 9.6-2.7 9.6-5.1 0-1.8-1.6-2.5-4.3-3.3-2.2-.7-3.2-.8-3.2-1.6A2.4 2.4 0 019 10.2a6.6 6.6 0 006.1-6.5 4.5 4.5 0 00-.2-1.5h2.5zM9.8 16.2c2.1.7 3 1 3 1.6 0 1.4-2 2.5-5.6 2.5-2.7 0-4-.6-4-2 0-1.5 1.4-2.5 3.5-3.3a21.5 21.5 0 003 1.2zM9 9c-1 0-1.3-.8-1.3-1.7 0-2.8 1.4-6.2 3.5-6.2 1 0 1.3.8 1.3 1.6 0 2.9-1.4 6.3-3.5 6.3z'/%3E%3C/symbol%3E%3Csymbol id='k' viewBox='0 0 23 25.1'%3E%3Cpath d='M14.3 15.6c1.9 0 2 .8 1.6 2.8H17l2.5-6.8h-1c-1 1.6-1.7 2.9-3.8 2.9h-4.1l2-5.6c.7-2 1-2.4 3.7-2.4H18c2.6 0 3 .7 3 3.5h1l.9-4.7H7.3l-.3.9c3 .6 3.3.9 2 4.8l-3.2 8.4c-1.5 3.9-2 4.2-5.6 4.8l-.2 1h17.4l3.2-5h-1.2c-2 2-4 3.8-8 3.8-4.7 0-4.3-.3-2.7-4.6l1.4-3.8h4.2zm2.3-11.8L21 .6V0h-3l-2.6 3.9h1.2v-.1z'/%3E%3C/symbol%3E%3Csymbol id='l' viewBox='0 0 13.6 21.8'%3E%3Cpath d='M11.4 6.4c-2 0-4 2.2-5.8 4.8L9.6.3 9.4 0l-5 .6V1l1 .8c.9.7.6 1.3-.2 3.4L.8 16.8A13.9 13.9 0 000 19c0 1.4 1.8 2.7 3.5 2.7 3.8 0 10-6.9 10-12.2 0-2.3-.5-3.2-2.1-3.2zM4.8 19.5c-.8 0-1.9-.7-1.9-1.3a15.5 15.5 0 01.8-2.2L5 12.7C6.3 11 8.4 9.3 9.6 9.3c.7 0 1.2.4 1.2 1.5 0 3.1-2.9 8.7-6 8.7z'/%3E%3C/symbol%3E%3Csymbol id='m' viewBox='0 0 19.2 19.9'%3E%3Cpath d='M17.6 0H7.3L7 .9c3 .6 3.3.9 2 4.8l-3.2 8.5c-1.5 3.9-2 4.2-5.5 4.8L0 20h15.7l3.5-6H18c-2 2-4.2 4.8-7.7 4.8-2.7 0-3-.5-1.6-4.5l3.1-8.5c1.4-3.9 2-4.2 5.5-4.8z'/%3E%3C/symbol%3E%3Csymbol id='n' viewBox='0 0 126 90'%3E%3Cuse width='12.4' height='21.8' x='112.7' y='66.1' href='%23b'/%3E%3Cuse width='11.5' height='19' x='102.2' y='69' href='%23c'/%3E%3Cuse width='9.8' height='21.9' x='93.6' y='66.1' href='%23d'/%3E%3Cuse width='14.8' height='15.5' x='77.2' y='72.5' href='%23e'/%3E%3Cuse width='12' height='15.5' x='65.7' y='72.5' href='%23f'/%3E%3Cuse width='11' height='15.5' x='54.3' y='72.5' href='%23a'/%3E%3Cuse width='11.5' height='19' x='43.7' y='69' href='%23c'/%3E%3Cuse width='14.7' height='16.2' x='28.9' y='71.8' href='%23g'/%3E%3Cuse width='12' height='15.5' x='19.6' y='72.5' href='%23f'/%3E%3Cuse width='21.9' height='19.8' y='67.6' href='%23h'/%3E%3Cuse width='12.4' height='21.8' x='77.3' y='33.1' href='%23b'/%3E%3Cuse width='11.5' height='19' x='66.8' y='36' href='%23c'/%3E%3Cuse width='9.8' height='21.9' x='58.2' y='33' href='%23d'/%3E%3Cuse width='10.1' height='21.9' x='49.4' y='33.1' href='%23i'/%3E%3Cuse width='14.7' height='16.2' x='34.9' y='38.8' href='%23g'/%3E%3Cuse width='18' height='22' x='18.6' y='39.4' href='%23j'/%3E%3Cuse width='23' height='25.1' y='29.3' href='%23k'/%3E%3Cuse width='12.4' height='21.8' x='76.8' y='.1' href='%23b'/%3E%3Cuse width='11.5' height='19' x='66.2' y='2.9' href='%23c'/%3E%3Cuse width='12' height='15.5' x='54.8' y='6.5' href='%23f'/%3E%3Cuse width='11' height='15.5' x='43.4' y='6.4' href='%23a'/%3E%3Cuse width='13.6' height='21.8' x='29.4' y='.1' href='%23l'/%3E%3Cuse width='9.8' height='21.9' x='20.6' href='%23d'/%3E%3Cuse width='19.2' height='19.9' y='1.4' href='%23m'/%3E%3C/symbol%3E%3C/defs%3E%3Cuse fill='%23000' width='126' height='90' x='0' y='0' href='%23n'/%3E%3Cuse fill='%23fff' width='126' height='90' x='126' y='90' href='%23n'/%3E%3C/svg%3E");
+}
+
+#header .header-appname,
+#header #nextcloud {
+  color: var(--dsfr-primary) !important;
+  font-weight: 700 !important;
+}
+
+#header .header-end .header-menu__trigger,
+#header .header-end button,
+#header .header-end a {
+  color: var(--dsfr-text-title) !important;
+}
+#header .header-end .header-menu__trigger:hover,
+#header .header-end button:hover,
+#header .header-end a:hover {
+  color: var(--dsfr-primary) !important;
+  background-color: var(--dsfr-primary-bg) !important;
+}
+
+/* Barre de recherche sidebar : style DSFR */
+div.app-navigation__search {
+  --color-main-background: var(--dsfr-bg-alt) !important;
+  --color-main-text: var(--dsfr-text-title) !important;
+  --input-border-color: var(--dsfr-border-med) !important;
+  --input-border-box-shadow: none !important;
+  --input-border-box-shadow-light: none !important;
+  --input-border-box-shadow-dark: none !important;
+  --color-border-maxcontrast: var(--dsfr-border-med) !important;
+  margin-bottom: 8px !important;
+  margin-top: 12px !important;
+}
+
+div.app-navigation__search div.app-navigation-search {
+  box-shadow: inset 0 -2px 0 0 var(--dsfr-primary) !important;
+  padding: 0 !important;
+  gap: 0 !important;
+}
+
+div.app-navigation__search .app-navigation-search__actions button,
+div.app-navigation__search .app-navigation-search__actions .button-vue {
+  background-color: var(--dsfr-primary) !important;
+  color: var(--dsfr-on-primary) !important;
+  border-radius: 0 var(--dsfr-radius) var(--dsfr-radius) 0 !important;
+  border: none !important;
+}
+div.app-navigation__search .app-navigation-search__actions button:hover,
+div.app-navigation__search .app-navigation-search__actions .button-vue:hover {
+  background-color: var(--dsfr-primary-hover) !important;
+}
+div.app-navigation__search .app-navigation-search__actions svg,
+div.app-navigation__search .app-navigation-search__actions span.icon-vue {
+  color: var(--dsfr-on-primary) !important;
+  fill: var(--dsfr-on-primary) !important;
+}
+
+div.app-navigation__search button.input-field__trailing-button {
+  color: var(--dsfr-text-mention) !important;
+  background: transparent !important;
+}
+div.app-navigation__search button.input-field__trailing-button:hover {
+  color: var(--dsfr-text-title) !important;
+}
+
+#header .app-menu-entry__link {
+  color: var(--dsfr-text-title) !important;
+}
+#header .app-menu-entry__link:hover,
+#header .app-menu-entry--active .app-menu-entry__link {
+  color: var(--dsfr-primary) !important;
+}
+
+/* Label d'appli active masqué visuellement, conservé pour lecteurs d'écran */
+#header .app-menu-entry__label {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  border: 0 !important;
+  overflow: hidden !important;
+  clip: rect(0 0 0 0) !important;
+  white-space: nowrap !important;
+  background: none !important;
+  box-shadow: none !important;
+}
+
+/* Pastille NC masquée, soulignement Bleu France à la place */
+#header .app-menu-entry--active::before {
+  display: none !important;
+}
+#header .app-menu-entry--active .app-menu-entry__link {
+  box-shadow: inset 0 -3px 0 0 var(--dsfr-primary) !important;
+}
+
+
+/*******************************************************************************
+  SECTION 4bis : EN-TÊTE DEUX RANGÉES (fr-header)
+  Activée exclusivement par la classe body `dsfr-header-ready`, posée par
+  js/dsfr-header.js après construction réussie de la navigation textuelle.
+*******************************************************************************/
+
+body.dsfr-header-ready {
+  --dsfr-nav-height: 48px;
+}
+
+@media (min-width: 1024px) {
+  body.dsfr-header-ready #content,
+  body.dsfr-header-ready #content-vue {
+    margin-top: calc(var(--header-height) + var(--dsfr-nav-height)) !important;
+    height: calc(var(--body-height) - var(--dsfr-nav-height)) !important;
+  }
+  body.dsfr-header-ready #content #content-vue,
+  body.dsfr-header-ready #content-vue #content {
+    margin-top: 0 !important;
+    height: 100% !important;
+  }
+}
+
+/* Menu d'icônes d'origine : masqué, non retiré (Vue en reste
+   propriétaire ; la nav textuelle n'est qu'une projection en lecture). */
+body.dsfr-header-ready #header .app-menu {
+  display: none !important;
+}
+
+/* Intitulé de service à droite du bloc-marque */
+.dsfr-service {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin-left: 1.5rem;
+  line-height: 1.3;
+  min-width: 0;
+}
+.dsfr-service__title {
+  font-weight: 700;
+  font-size: 1.25rem;
+  color: var(--dsfr-text-title);
+  white-space: nowrap;
+}
+.dsfr-service__tagline {
+  font-size: 0.75rem;
+  line-height: 1.25;
+  color: var(--dsfr-text-mention);
+  max-width: 42ch;
+}
+
+/* Bandeau de navigation textuelle (rangée 2) */
+nav.dsfr-nav {
+  position: fixed;
+  top: var(--header-height);
+  left: 0;
+  right: 0;
+  height: var(--dsfr-nav-height);
+  display: flex;
+  align-items: stretch;
+  gap: 0.25rem;
+  padding: 0 1rem;
+  background: var(--dsfr-bg-default);
+  border-bottom: 1px solid var(--dsfr-border-subtle);
+  z-index: 1999;   /* sous le #header NC et ses popovers [VERIF] */
+  overflow-x: auto;
+}
+
+nav.dsfr-nav a.dsfr-nav__item,
+nav.dsfr-nav a.dsfr-nav__item:visited {
+  display: flex;
+  align-items: center;
+  padding: 0 1rem;
+  color: var(--dsfr-text-title);
+  text-decoration: none;
+  white-space: nowrap;
+  font-size: 1rem;
+  font-weight: 400;
+}
+nav.dsfr-nav a.dsfr-nav__item:hover {
+  background: var(--dsfr-bg-alt);
+  color: var(--dsfr-text-title);
+}
+nav.dsfr-nav a.dsfr-nav__item--active,
+nav.dsfr-nav a.dsfr-nav__item--active:visited {
+  color: var(--dsfr-primary);
+  font-weight: 500;
+  box-shadow: inset 0 -3px 0 0 var(--dsfr-primary);
+}
+
+/* Mobile : NC replie son menu d'applications ; on retire le bandeau et on
+   restitue l'offset d'une rangée. */
+@media (max-width: 1023px) {
+  nav.dsfr-nav {
+    display: none;
+  }
+  .dsfr-service {
+    display: none;
+  }
+}
+
+
+/*******************************************************************************
+  SECTION 5 : DSFR - BARRE LATERALE (SIDEBAR)
+*******************************************************************************/
+
+.app-navigation-entry.active,
+.app-navigation-entry.active .app-navigation-entry-link {
+  background-color: var(--dsfr-primary-bg) !important;
+  border-radius: var(--dsfr-radius) !important;
+}
+.app-navigation-entry.active .app-navigation-entry-link,
+.app-navigation-entry.active .app-navigation-entry__name {
+  color: var(--dsfr-primary) !important;
+  font-weight: 500 !important;
+}
+
+.app-navigation-entry.active:hover,
+.app-navigation-entry.active:hover .app-navigation-entry-link {
+  background-color: var(--dsfr-primary-bg-hover) !important;
+}
+
+.app-navigation-entry .app-navigation-entry-icon .icon-vue,
+.app-navigation-entry .app-navigation-entry-icon svg {
+  color: var(--dsfr-text-title) !important;
+  fill: currentColor !important;
+}
+.app-navigation-entry.active .app-navigation-entry-icon .icon-vue,
+.app-navigation-entry.active .app-navigation-entry-icon svg {
+  color: var(--dsfr-primary) !important;
+}
+
+/* Entrées non actives */
+.app-navigation-entry:not(.active) .app-navigation-entry-link,
+.app-navigation-entry:not(.active) .app-navigation-entry-link:visited,
+.app-navigation-entry:not(.active) .app-navigation-entry__name {
+  color: var(--dsfr-text) !important;
+}
+
+.app-navigation-entry:not(.active):hover,
+.app-navigation-entry:not(.active):hover .app-navigation-entry-link {
+  background-color: var(--dsfr-bg-alt) !important;
+  border-radius: var(--dsfr-radius) !important;
+}
+
+
+/*******************************************************************************
+  SECTION 6 : DSFR - BOUTONS
+*******************************************************************************/
+
+.button-vue--text-only,
+.button-vue--icon-and-text {
+  border-radius: var(--dsfr-radius) !important;
+}
+
+.button-vue--vue-primary,
+.button-vue.primary {
+  background-color: var(--dsfr-primary) !important;
+  border-color: var(--dsfr-primary) !important;
+  color: var(--dsfr-on-primary) !important;
+  font-weight: 500 !important;
+}
+.button-vue--vue-primary:hover,
+.button-vue.primary:hover {
+  background-color: var(--dsfr-primary-hover) !important;
+  border-color: var(--dsfr-primary-hover) !important;
+}
+.button-vue--vue-primary:active,
+.button-vue.primary:active {
+  background-color: var(--dsfr-primary-active) !important;
+  border-color: var(--dsfr-primary-active) !important;
+}
+.button-vue--vue-primary:focus-visible,
+.button-vue.primary:focus-visible {
+  outline: 2px solid var(--dsfr-focus) !important;
+  outline-offset: 2px !important;
+}
+
+.button-vue--vue-secondary,
+.button-vue.secondary {
+  border: 1px solid var(--dsfr-primary) !important;
+  color: var(--dsfr-primary) !important;
+  background: transparent !important;
+}
+.button-vue--vue-secondary:hover,
+.button-vue.secondary:hover {
+  background-color: var(--dsfr-primary-bg) !important;
+}
+.button-vue--vue-secondary:active,
+.button-vue.secondary:active {
+  background-color: var(--dsfr-primary-bg-hover) !important;
+}
+
+.button-vue--vue-tertiary:hover,
+.button-vue.tertiary:hover {
+  background-color: var(--dsfr-bg-alt) !important;
+}
+
+.button-vue:disabled,
+.button-vue[disabled],
+.button-vue--disabled {
+  background-color: var(--dsfr-bg-disabled) !important;
+  border-color: var(--dsfr-bg-disabled) !important;
+  color: var(--dsfr-text-disabled) !important;
+}
+
+a:not(.button-vue) {
+  color: var(--dsfr-primary);
+}
+a:not(.button-vue):hover {
+  color: var(--dsfr-primary-hover);
+}
+a:not(.button-vue):visited {
+  color: var(--dsfr-primary);
+}
+
+
+/*******************************************************************************
+  SECTION 7 : CHAMPS DE SAISIE
+*******************************************************************************/
+
+.modal-container input[type="text"],
+.modal-container input[type="password"],
+.modal-container input[type="email"],
+.modal-container input[type="url"],
+.modal-container textarea,
+.dialog input[type="text"],
+.dialog textarea,
+#personal-settings input[type="text"],
+#personal-settings input[type="email"],
+#personal-settings textarea {
+  background: var(--dsfr-bg-contrast) !important;
+  border: none !important;
+  border-radius: var(--dsfr-radius) var(--dsfr-radius) 0 0 !important;
+  box-shadow: inset 0 -2px 0 0 var(--dsfr-border-strong) !important;
+  color: var(--dsfr-text-title) !important;
+}
+.modal-container input:focus,
+.modal-container textarea:focus,
+.dialog input:focus,
+#personal-settings input:focus,
+#personal-settings textarea:focus {
+  outline: 2px solid var(--dsfr-focus) !important;
+  outline-offset: 2px !important;
+}
+
+
+/*******************************************************************************
+  SECTION 8 : CONTENU PRINCIPAL
+*******************************************************************************/
+
+.files-list__header h2,
+.files-list__header h1,
+#app-content .rich-workspace h1,
+#app-content .rich-workspace h2 {
+  color: var(--dsfr-text-title) !important;
+  font-weight: 700 !important;
+}
+
+.files-list__thead {
+  border-bottom: 2px solid var(--dsfr-border-strong) !important;
+}
+.files-list__thead .files-list__column {
+  color: var(--dsfr-text-title) !important;
+  font-weight: 700 !important;
+}
+
+.files-list__row-icon {
+  color: var(--dsfr-primary) !important;
+}
+
+.files-list .files-list__row:hover {
+  background-color: var(--dsfr-bg-alt) !important;
+}
+
+.files-list__row--active,
+.files-list__row[aria-selected="true"] {
+  background-color: var(--dsfr-primary-bg-subtle) !important;
+}
+
+.files-list__row .files-list__row-action-sharing-status,
+.files-list__row .files-list__row-action-sharing-status button {
+  background-color: transparent !important;
+}
+.files-list__row .files-list__row-action-sharing-status,
+.files-list__row .files-list__row-action-sharing-status * {
+  color: var(--dsfr-text-mention) !important;
+  font-weight: 500 !important;
+}
+
+.breadcrumb a,
+.breadcrumb span {
+  color: var(--dsfr-primary) !important;
+}
+
+/* Cases à cocher : rendu DSFR.
+   Le glyphe SVG (MDI) est masqué et la case est dessinée en CSS : même taille
+   cochée/décochée (le glyphe décoché est plus petit que le conteneur peint en
+   coché, d'où un effet de grossissement sinon), arrondi 0.25rem (officiel DSFR,
+   --dsfr-radius trop fort à cette taille), coche blanche en data-URI.
+   Scopé sur -checkbox:not(--button-variant) pour épargner radios, switches et
+   les onglets Activité/Partage/Versions de la sidebar de détails, qui
+   réutilisent le même composant. */
+input[type="checkbox"] {
+  border-radius: 0.25rem !important;
+}
+input[type="checkbox"]:checked {
+  background-color: var(--dsfr-primary) !important;
+  border-color: var(--dsfr-primary) !important;
+}
+
+.checkbox-radio-switch-checkbox:not(.checkbox-radio-switch--button-variant) .checkbox-radio-switch__icon svg {
+  display: none !important;
+}
+.checkbox-radio-switch-checkbox:not(.checkbox-radio-switch--button-variant) .checkbox-radio-switch__icon {
+  box-sizing: border-box !important;
+  width: 1.125rem !important;
+  height: 1.125rem !important;
+  flex: 0 0 auto !important;
+  border: 2px solid var(--dsfr-text-title) !important;
+  border-radius: 0.25rem !important;
+  background: transparent center / 0.875rem no-repeat !important;
+}
+.checkbox-radio-switch-checkbox.checkbox-radio-switch--checked:not(.checkbox-radio-switch--button-variant) .checkbox-radio-switch__icon {
+  background-color: var(--dsfr-primary) !important;
+  border-color: var(--dsfr-primary) !important;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23fff' d='M10 15.2 19.2 6l1.4 1.4L10 18l-6.6-6.6L4.8 10z'/%3E%3C/svg%3E") !important;
+}
+/* Sélection partielle (en-tête de liste) : tiret blanc */
+.checkbox-radio-switch-checkbox.checkbox-radio-switch--indeterminate:not(.checkbox-radio-switch--button-variant) .checkbox-radio-switch__icon {
+  background-color: var(--dsfr-primary) !important;
+  border-color: var(--dsfr-primary) !important;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23fff' d='M5 11h14v2H5z'/%3E%3C/svg%3E") !important;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--dsfr-focus) !important;
+  outline-offset: 2px !important;
+}
+
+html {
+  scrollbar-color: var(--dsfr-primary-muted) transparent;   /* Firefox */
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background-color: var(--dsfr-primary-muted);
+  border-radius: 0.25rem;
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--dsfr-primary);
+}
+
+
+/*******************************************************************************
+  SECTION 9 : DIALOGUES ET MODALES
+*******************************************************************************/
+
+.modal-container,
+.dialog,
+.oc-dialog {
+  border-radius: var(--dsfr-radius-lg) !important;
+  box-shadow: var(--dsfr-shadow) !important;
+}
+
+.modal-container .modal-header,
+.dialog .oc-dialog-title {
+  font-weight: 700 !important;
+  color: var(--dsfr-text-title) !important;
+}
+
+
+/*******************************************************************************
+  SECTION 10 : NOTIFICATIONS ET TOASTS
+*******************************************************************************/
+
+.toastify {
+  border-radius: var(--dsfr-radius) !important;
+}
+.toastify.toast-success {
+  background-color: #18753c !important;
+}
+.toastify.toast-error {
+  background-color: #ce0500 !important;
+}
+.toastify.toast-warning {
+  background-color: #b34000 !important;
+}
+.toastify.toast-info {
+  background-color: #0063cb !important;
+}
