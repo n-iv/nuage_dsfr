@@ -161,7 +161,7 @@ body {
   --color-warning: #b34000 !important;
   --color-success: #18753c !important;
 
-  --header-height: 96px !important;
+  --header-height: var(--dsfr-row1-height) !important;
 }
 
 /* ---- 2d. INVARIANTS NON CHROMATIQUES -> :root ----
@@ -188,8 +188,15 @@ body {
 
   --body-container-radius: 0 !important;
 
-  /* Rangée 1 de l'en-tête. */
-  --header-height: 96px !important;
+  /* Hauteurs des deux rangées de l'en-tête. --header-height est LA hauteur
+     totale du chrome fixe au sens Nextcloud : le serveur en dérive
+     --body-height, les offsets de contenu, les modales et les popovers.
+     Rangée 1 seule par défaut ; rangées 1+2 quand le bandeau est actif
+     (bascule en Section 4bis). Le dimensionnement de la rangée 1 elle-même
+     passe par --dsfr-row1-height, jamais par --header-height. */
+  --dsfr-row1-height: 96px;
+  --dsfr-nav-height: 48px;
+  --header-height: var(--dsfr-row1-height) !important;
 }
 
 body#body-user,
@@ -299,31 +306,31 @@ body#body-login .body-login-container footer a {
   background: var(--dsfr-bg-default) !important;
   border-bottom: 1px solid var(--dsfr-border-subtle) !important;
   box-shadow: none !important;
-  height: var(--header-height) !important;
+  height: var(--dsfr-row1-height) !important;
   align-items: center !important;
 }
 
 #header .header-start,
 #header .header-end {
-  height: var(--header-height) !important;
+  height: var(--dsfr-row1-height) !important;
   align-items: center !important;
 }
 
 #header #nextcloud {
-  height: var(--header-height) !important;
+  height: var(--dsfr-row1-height) !important;
   display: flex !important;
   align-items: center !important;
 }
 
 #header #nextcloud img {
-  height: calc(var(--header-height) - 1rem) !important;
+  height: calc(var(--dsfr-row1-height) - 1rem) !important;
   width: auto !important;
   max-width: none !important;
   object-fit: contain !important;
   object-position: left center !important;
 }
 #header #nextcloud .logo {
-  height: calc(var(--header-height) - 1rem) !important;
+  height: calc(var(--dsfr-row1-height) - 1rem) !important;
   width: 232px !important;
   background-size: contain !important;
   background-position: left center !important;
@@ -493,20 +500,23 @@ div.app-navigation__search button.input-field__trailing-button:hover {
   js/dsfr-header.js après construction réussie de la navigation textuelle.
 *******************************************************************************/
 
-body.dsfr-header-ready {
-  --dsfr-nav-height: 48px;
-}
-
+/* Bandeau actif (desktop) : la hauteur d'en-tête au sens Nextcloud devient
+   rangée 1 + rangée 2, et TOUT le placement (offsets de contenu, modales,
+   popovers, --body-height figée sur :root, cf. Section 2d) se recale seul
+   par la dérivation native du serveur : aucun override par conteneur.
+   L'ancienne compensation ciblée #content/#content-vue ne couvrait pas
+   toutes les dispositions (bas des annonces tronqué de la hauteur du
+   bandeau, contenu glissant sous la nav).
+   Deux règles séparées, jamais une liste : sans :has() (navigateurs
+   antérieurs à 2023), la règle body doit survivre seule — dégradé =
+   offsets corrects, bas de page tronqué de 48px (l'état d'avant ce
+   correctif). [VERIF] */
 @media (min-width: 1024px) {
-  body.dsfr-header-ready #content,
-  body.dsfr-header-ready #content-vue {
-    margin-top: calc(var(--header-height) + var(--dsfr-nav-height)) !important;
-    height: calc(var(--body-height) - var(--dsfr-nav-height)) !important;
+  :root:has(body.dsfr-header-ready) {
+    --header-height: calc(var(--dsfr-row1-height) + var(--dsfr-nav-height)) !important;
   }
-  body.dsfr-header-ready #content #content-vue,
-  body.dsfr-header-ready #content-vue #content {
-    margin-top: 0 !important;
-    height: 100% !important;
+  body.dsfr-header-ready {
+    --header-height: calc(var(--dsfr-row1-height) + var(--dsfr-nav-height)) !important;
   }
 }
 
@@ -541,7 +551,7 @@ body.dsfr-header-ready #header .app-menu {
 /* Bandeau de navigation textuelle (rangée 2) */
 nav.dsfr-nav {
   position: fixed;
-  top: var(--header-height);
+  top: var(--dsfr-row1-height);
   left: 0;
   right: 0;
   height: var(--dsfr-nav-height);

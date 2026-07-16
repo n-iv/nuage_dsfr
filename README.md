@@ -57,7 +57,10 @@ la désactivation est sans reste.
    sombre explicite, thème système + OS sombre), mire, modales,
    états des boutons.
 3. Points de fragilité connus, marqués [VERIF] dans les sources :
-   - l'offset du contenu suit `--header-height` ;
+   - le placement du contenu suit `--header-height`, publiée à la hauteur
+     totale du chrome (rangées 1+2) quand le bandeau est actif ; la rangée 1
+     se dimensionne exclusivement via `--dsfr-row1-height` ; la bascule
+     :root repose sur `:has()` (dégradé sans : bas de page tronqué de 48px) ;
    - l'extraction des libellés du menu (`.app-menu-entry__label`,
      repli `aria-label`/`title`) ;
    - le seuil mobile (bandeau retiré < 1024 px) ;
