@@ -308,6 +308,11 @@ body#body-login .body-login-container footer a {
   box-shadow: none !important;
   height: var(--dsfr-row1-height) !important;
   align-items: center !important;
+  /* Les composants internes (NcHeaderMenu, notifications…) se dimensionnent
+     sur --header-height : dans le sous-arbre de l'en-tête, elle vaut la
+     rangée 1 seule, sinon leurs icônes descendent de (nav/2) en mode
+     bandeau. */
+  --header-height: var(--dsfr-row1-height) !important;
 }
 
 #header .header-start,
