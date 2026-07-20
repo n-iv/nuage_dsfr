@@ -233,6 +233,18 @@ body#body-login::before {
   z-index: 9999;
 }
 
+/* Layout guest (mire, flow client v1/v2, « Account connected », 2FA,
+   mot de passe perdu, erreurs, maintenance) : toutes ces pages portent
+   body#body-login, et leur #header n'est qu'un porte-logo centré — les
+   règles de l'en-tête applicatif (Section 4) ne doivent pas en faire un
+   bandeau blanc bordé. */
+body#body-login #header {
+  background: none !important;
+  border-bottom: none !important;
+  box-shadow: none !important;
+  height: auto !important;
+}
+
 body#body-login .guest-box {
   background: #ffffff !important;
   border: 1px solid #dddddd !important;
