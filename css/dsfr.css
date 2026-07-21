@@ -423,14 +423,17 @@ body:not(#body-login):not(.dsfr-brand-ready) #header #nextcloud .logo {
   font-weight: 700 !important;
 }
 
+/* Le :not() épargne les boutons primaires (« Tout télécharger » des pages
+   publiques, monté dans .header-end) : sans lui, ce sélecteur à poids d'id
+   battrait la Section 6 et poserait un libellé noir sur fond Bleu France. */
 #header .header-end .header-menu__trigger,
-#header .header-end button,
-#header .header-end a {
+#header .header-end button:not(.button-vue--vue-primary),
+#header .header-end a:not(.button-vue--vue-primary) {
   color: var(--dsfr-text-title) !important;
 }
 #header .header-end .header-menu__trigger:hover,
-#header .header-end button:hover,
-#header .header-end a:hover {
+#header .header-end button:not(.button-vue--vue-primary):hover,
+#header .header-end a:not(.button-vue--vue-primary):hover {
   color: var(--dsfr-primary) !important;
   background-color: var(--dsfr-primary-bg) !important;
 }
@@ -560,6 +563,7 @@ body.dsfr-header-ready #header .app-menu {
 }
 .dsfr-service__tagline {
   font-size: 0.75rem;
+  font-weight: 400;
   line-height: 1.25;
   color: var(--dsfr-text-mention);
   max-width: 42ch;
@@ -613,6 +617,60 @@ nav.dsfr-nav a.dsfr-nav__item--active:visited {
   .dsfr-service {
     display: none;
   }
+}
+
+
+/*******************************************************************************
+  SECTION 4ter : PAGES PUBLIQUES (PARTAGES, body#body-public)
+  Rangée 1 seule : bloc-marque | intitulé de service | titre du partage.
+  Sur ces pages, #nextcloud (div.header-appname) contient AUSSI le titre
+  (.header-info) ; le serveur pose le logo en absolu (62px) et réserve
+  86px de retrait sur #nextcloud. js/dsfr-header.js y construit bloc-marque
+  et intitulé comme en session (la nav textuelle, elle, ne se construit
+  jamais : pas de menu d'applications).
+*******************************************************************************/
+
+body#body-public #header #nextcloud {
+  flex-wrap: nowrap !important;   /* une seule ligne, le titre s'ellipse */
+}
+
+/* Repli sans JS : retour à la géométrie serveur du logo (62px absolu,
+   compensée par le retrait de 86px). L'agrandissement de la Section 4,
+   pensé pour un #nextcloud sans texte, ferait passer le titre sur le
+   logo. */
+body#body-public #header #nextcloud .logo {
+  width: 62px !important;
+  height: auto !important;           /* re-calé sur top/bottom serveur */
+  background-position: center !important;
+}
+
+/* Titre du partage : contexte de page, pas un élément de marque :
+   couleur texte et filet séparateur, à la place du bleu gras hérité de
+   #nextcloud (Section 4). */
+body#body-public #header .header-info {
+  align-self: center;
+  margin-inline-start: 1.5rem;
+  padding-inline-start: 1.5rem;
+  border-inline-start: 1px solid var(--dsfr-border-subtle);
+}
+body#body-public #header .header-info .header-title {
+  color: var(--dsfr-text-title) !important;
+  font-weight: 500 !important;
+  font-size: 1rem !important;
+}
+body#body-public #header .header-info .header-shared-by {
+  color: var(--dsfr-text-mention) !important;
+}
+
+/* Icône du bouton « Télécharger » : glyphe legacy en background-image
+   piloté par filter (--primary-invert-if-bright), hors de portée de
+   currentColor et des tokens — le libellé suit le thème, pas elle.
+   Rejouée en masque et colorée par --dsfr-on-primary, comme le libellé. */
+body#body-public #header .public-page-menu__primary-icon.icon-download {
+  filter: none !important;
+  background: var(--dsfr-on-primary) !important;
+  -webkit-mask: url('/core/img/actions/download.svg') no-repeat center;
+  mask: url('/core/img/actions/download.svg') no-repeat center;
 }
 
 

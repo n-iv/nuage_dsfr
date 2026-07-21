@@ -6,8 +6,11 @@ declare(strict_types=1);
  * Injection des ressources DSFR :
  *  - CSS partout (mire de connexion comprise : les règles y sont scopées
  *    body#body-login, sans effet ailleurs) ;
- *  - JS structurel (en-tête deux rangées) uniquement en session : la mire
- *    n'a ni menu d'applications ni bloc-marque à transformer.
+ *  - JS structurel en session et sur les pages publiques (partages) :
+ *    bloc-marque + intitulé de service partout où un #nextcloud existe ;
+ *    la nav textuelle (rangée 2) ne se construit que si un menu
+ *    d'applications est présent, donc jamais côté public (fail-open).
+ *    La mire, elle, n'a ni menu ni bloc-marque à transformer : CSS seul.
  *
  * Le versioning de l'app (info.xml) sert de cache-busting : chaque bump de
  * version invalide les URL css/js chez les clients.
@@ -36,12 +39,12 @@ class TemplateListener implements IEventListener {
 		if ($event instanceof BeforeTemplateRenderedEvent) {
 			$this->addFontPreloads();
 			Util::addStyle(Application::APP_ID, 'dsfr');
+			Util::addScript(Application::APP_ID, 'dsfr-header');
 			if ($event->isLoggedIn()) {
 				// Couche fonctionnelle (verrous d'exploitation) : en session
 				// uniquement — ses cibles (settings, corbeille) n'existent
 				// pas sur les pages publiques.
 				Util::addStyle(Application::APP_ID, 'functional');
-				Util::addScript(Application::APP_ID, 'dsfr-header');
 			}
 		}
 	}

@@ -8,7 +8,8 @@ aucune dépendance, aucun état.
 ## Architecture
 
 - `lib/` : enregistre un listener sur `BeforeTemplateRenderedEvent`
-  (pages en session) et `BeforeLoginTemplateRenderedEvent` (mire).
+  (pages en session et pages publiques : partages) et
+  `BeforeLoginTemplateRenderedEvent` (mire).
   API vérifiées sur la branche `stable32` du serveur.
 - `css/dsfr.css` : la couche de tokens clair/sombre validée, plus la
   Section 4bis (en-tête deux rangées), gardée par la classe body
@@ -17,7 +18,10 @@ aucune dépendance, aucun état.
   via `OC.theming.name` + nom d'hôte) et la navigation textuelle en
   LISANT le menu d'applications Vue, sans jamais le modifier. Fail-open :
   en cas d'échec, la classe n'est pas posée et l'interface standard
-  habillée est servie.
+  habillée est servie. Sur les pages publiques (pas de menu
+  d'applications), seuls bloc-marque et intitulé sont construits ; le
+  titre du partage reste après eux dans `#nextcloud` (Section 4ter du
+  CSS).
 
 Les règles fonctionnelles (masquages settings, corbeille, partages, menu
 photos) restent dans `theming_customcss` : cycles de vie distincts. Lors

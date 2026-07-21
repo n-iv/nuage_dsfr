@@ -87,7 +87,9 @@
 		devise.setAttribute('aria-hidden', 'true');
 		brand.appendChild(devise);
 
-		// Lien d'accueil : adresse canonique (maître) plutôt que le nœud local.
+		// Lien d'accueil : adresse canonique (maître) plutôt que le nœud
+		// local. Sur les pages publiques #nextcloud est un simple div :
+		// pas de lien à réécrire.
 		var home = BRAND_HOME_URL;
 		if (!home) {
 			try {
@@ -97,11 +99,14 @@
 				}
 			} catch (e) { /* href d'origine conservé */ }
 		}
-		if (home) {
+		if (home && logoLink.tagName === 'A') {
 			logoLink.href = home;
 		}
 
-		logoLink.appendChild(brand);
+		// En premier enfant : sur les pages publiques, #nextcloud contient
+		// aussi le titre du partage (.header-info), qui doit rester après
+		// le bloc-marque et l'intitulé de service.
+		logoLink.insertBefore(brand, logoLink.firstChild);
 
 		// Bascule image → bloc-marque seulement quand Marianne est active :
 		// avant ça, le texte rendrait en police de repli puis se
@@ -160,7 +165,15 @@
 
 		wrap.appendChild(title);
 		wrap.appendChild(tagline);
-		logo.insertAdjacentElement('afterend', wrap);
+		// Juste après le bloc-marque quand il existe (ordre : bloc-marque,
+		// intitulé, puis - pages publiques - titre du partage) ; sinon
+		// après le porte-logo (repli, bloc-marque non construit).
+		var brand = document.querySelector('.dsfr-brand');
+		if (brand) {
+			brand.insertAdjacentElement('afterend', wrap);
+		} else {
+			logo.insertAdjacentElement('afterend', wrap);
+		}
 	}
 
 	/**
