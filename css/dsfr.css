@@ -173,11 +173,13 @@ body {
    est déclarée : cette dérivée est donc figée avec le --header-height de
    :root. Déclarer notre hauteur d'en-tête sur body la rendrait invisible
    à ce calcul (contenu dimensionné pour 50px mais décalé de 80px : bas de
-   page tronqué). Les invariants doivent vivre sur :root ; seuls les tokens
-   chromatiques vivent sur body (nécessité thèmes clair/sombre). */
+   page tronqué). Les invariants doivent vivre sur :root ; ce qu'un thème
+   serveur redéfinit doit en plus être rappelé sur body (tokens chromatiques,
+   et --font-face en Section 2e). */
 :root {
-  --font-face: 'Marianne', 'Segoe UI', system-ui, -apple-system,
-               'Liberation Sans', 'Helvetica Neue', Arial, sans-serif !important;
+  --dsfr-font-face: 'Marianne', 'Segoe UI', system-ui, -apple-system,
+                    'Liberation Sans', 'Helvetica Neue', Arial, sans-serif;
+  --font-face: var(--dsfr-font-face) !important;
   /* Rayons : dérogation au DSFR voulue, cohérence Mon Aide Numérique et suite ETNA.
      Remettre à 0 les deux tokens suivants pour remettre un DSFR strict. */
   --dsfr-radius: 0.375rem;
@@ -197,6 +199,24 @@ body {
   --dsfr-row1-height: 96px;
   --dsfr-nav-height: 48px;
   --header-height: var(--dsfr-row1-height) !important;
+}
+
+/* ---- 2e. TYPOGRAPHIE : RAPPEL SUR BODY ----
+   Le --font-face de :root ci-dessus ne suffit pas. Les thèmes explicites du
+   serveur (« Thème clair », « Thème sombre »…) posent leur propre
+   --font-face dans "[data-theme-<id>] { … }", et cet attribut est porté par
+   <body>, pas par <html>. Or l'importance (!important) n'arbitre qu'entre
+   déclarations d'un MÊME élément : une valeur non-!important posée sur body
+   l'emporte pour tout son sous-arbre sur une valeur !important héritée de
+   :root. Sans ce rappel, Marianne ne tenait qu'en thème « par défaut du
+   système » (aucun attribut data-theme-*) et retombait sur la pile système
+   de Nextcloud dès qu'un thème était choisi explicitement.
+
+   Exclusion opendyslexic : la fonte pour dyslexiques (RGAA) prime sur la
+   charte de l'État. Quand elle est active on ne déclare rien et on laisse la
+   main au thème serveur, qui pose "OpenDyslexic, <pile de repli>". */
+body:not([data-theme-opendyslexic]) {
+  --font-face: var(--dsfr-font-face) !important;
 }
 
 body#body-user,
