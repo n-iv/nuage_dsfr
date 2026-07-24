@@ -560,6 +560,17 @@ div.app-navigation__search button.input-field__trailing-button:hover {
   }
 }
 
+/* Éditeur Collabora (viewer, handler richdocuments) : richdocuments vise
+   le plein écran en compensant en dur la hauteur d'en-tête.*/
+[data-handler='richdocuments'] .modal-container {
+  top: 0 !important;
+  height: 100% !important;
+  max-height: none !important;
+}
+.viewer__content .office-viewer {
+  top: 0 !important;
+}
+
 /* Menu d'icônes d'origine : masqué, non retiré (Vue en reste
    propriétaire ; la nav textuelle n'est qu'une projection en lecture). */
 body.dsfr-header-ready #header .app-menu {
