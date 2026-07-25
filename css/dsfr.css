@@ -145,6 +145,7 @@ body {
   --color-primary-element-light-hover: var(--dsfr-primary-bg-hover) !important;
   --color-primary-element-light-text: var(--dsfr-primary) !important;
   --color-primary-element-text: var(--dsfr-on-primary) !important;
+  --color-primary-element-text-dark: var(--dsfr-on-primary) !important;
 
   --color-main-text: var(--dsfr-text) !important;
   --color-main-background: var(--dsfr-bg-default) !important;
@@ -809,6 +810,34 @@ body#body-public #header .public-page-menu__primary-icon.icon-download {
   color: var(--dsfr-text-disabled) !important;
 }
 
+/* Boutons legacy : markup HTML/jQuery hors composants Vue (files_linkeditor,
+   dialogues historiques). */
+button:not(.button-vue).primary,
+input[type="submit"].primary,
+input[type="button"].primary,
+.button.primary {
+  background-color: var(--dsfr-primary) !important;
+  border-color: var(--dsfr-primary) !important;
+  color: var(--dsfr-on-primary) !important;
+  border-radius: var(--dsfr-radius) !important;
+  font-weight: 500 !important;
+}
+button:not(.button-vue).primary:not(:disabled):hover,
+input[type="submit"].primary:not(:disabled):hover,
+input[type="button"].primary:not(:disabled):hover,
+.button.primary:not(:disabled):hover {
+  background-color: var(--dsfr-primary-hover) !important;
+  border-color: var(--dsfr-primary-hover) !important;
+}
+button:not(.button-vue).primary:disabled,
+input[type="submit"].primary:disabled,
+input[type="button"].primary:disabled,
+.button.primary:disabled {
+  background-color: var(--dsfr-bg-disabled) !important;
+  border-color: var(--dsfr-bg-disabled) !important;
+  color: var(--dsfr-text-disabled) !important;
+}
+
 a:not(.button-vue) {
   color: var(--dsfr-primary);
 }
@@ -973,6 +1002,19 @@ html {
 .dialog .oc-dialog-title {
   font-weight: 700 !important;
   color: var(--dsfr-text-title) !important;
+}
+
+/* files_linkeditor : dialogue maison empilant un corps (.edit) et une ou deux
+   rangées de boutons. */
+.linkeditor-oc-dialog .edit,
+.linkeditor-oc-dialog-buttonrow {
+  box-sizing: border-box !important;
+  width: 440px !important;
+  max-width: 92vw !important;
+}
+.linkeditor-oc-dialog-buttonrow {
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 
 
