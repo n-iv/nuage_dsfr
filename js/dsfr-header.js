@@ -88,8 +88,7 @@
 		brand.appendChild(devise);
 
 		// Lien d'accueil : adresse canonique (maître) plutôt que le nœud
-		// local. Sur les pages publiques #nextcloud est un simple div :
-		// pas de lien à réécrire.
+		// local. Sur les pages publiques #nextcloud est un simple div.
 		var home = BRAND_HOME_URL;
 		if (!home) {
 			try {

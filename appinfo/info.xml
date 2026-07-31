@@ -13,12 +13,12 @@ La transformation de l'en-tête est « fail-open » : si le JavaScript ne peut p
 s'appliquer, l'interface Nextcloud standard (habillée CSS) est conservée.
 Désactivation instantanée : occ app:disable nuage_dsfr
     ]]></description>
-    <version>32.0.8</version>
+    <version>33.0.0</version>
     <licence>agpl</licence>
     <author>Nicolas Varlot</author>
     <namespace>NuageDsfr</namespace>
     <category>customization</category>
     <dependencies>
-        <nextcloud min-version="32" max-version="32"/>
+        <nextcloud min-version="33" max-version="33"/>
     </dependencies>
 </info>

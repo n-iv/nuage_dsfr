@@ -129,10 +129,7 @@ SETTINGS: SECURITY
 *********************/
 
 /* Hides the section to change the password */
-main#app-content div.settings-section.settings-section--limit-width #passwordform {
-  display:none;
-}
-#body-settings #app-content .settings-section:has(#passwordform) {
+#body-settings #app-content .settings-section:has(input[type="password"]) {
   display: none;
 }
 
@@ -250,6 +247,6 @@ SETTINGS: APPEARANCE
   display: none;
 }
 
-#body-settings #app-content .settings-section:has(.primary-color__wrapper) {
+#body-settings #app-content .settings-section:has([class*="userPrimaryColor"]) {
   display: none;
 }

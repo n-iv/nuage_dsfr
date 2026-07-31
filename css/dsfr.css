@@ -1,6 +1,6 @@
 /* =============================================================================
    HABILLAGE DSFR (application nuage_dsfr)
-   Version NC cible : 32.0.8 / 32.0.9
+   Version NC cible : 33
    ========================================================================== */
 
 
@@ -256,9 +256,7 @@ body#body-login::before {
 
 /* Layout guest (mire, flow client v1/v2, « Account connected », 2FA,
    mot de passe perdu, erreurs, maintenance) : toutes ces pages portent
-   body#body-login, et leur #header n'est qu'un porte-logo centré — les
-   règles de l'en-tête applicatif (Section 4) ne doivent pas en faire un
-   bandeau blanc bordé. */
+   body#body-login, et leur #header n'est qu'un porte-logo centré. */
 body#body-login #header {
   background: none !important;
   border-bottom: none !important;
@@ -341,10 +339,6 @@ body#body-login .body-login-container footer a {
   box-shadow: none !important;
   height: var(--dsfr-row1-height) !important;
   align-items: center !important;
-  /* Les composants internes (NcHeaderMenu, notifications…) se dimensionnent
-     sur --header-height : dans le sous-arbre de l'en-tête, elle vaut la
-     rangée 1 seule, sinon leurs icônes descendent de (nav/2) en mode
-     bandeau. */
   --header-height: var(--dsfr-row1-height) !important;
 }
 
@@ -655,11 +649,12 @@ nav.dsfr-nav a.dsfr-nav__item--active:visited {
 /*******************************************************************************
   SECTION 4ter : PAGES PUBLIQUES (PARTAGES, body#body-public)
   Rangée 1 seule : bloc-marque | intitulé de service | titre du partage.
-  Sur ces pages, #nextcloud (div.header-appname) contient AUSSI le titre
+  Sur ces pages, #nextcloud (div.header-appname) contient aussi le titre
   (.header-info) ; le serveur pose le logo en absolu (62px) et réserve
-  86px de retrait sur #nextcloud. js/dsfr-header.js y construit bloc-marque
-  et intitulé comme en session (la nav textuelle, elle, ne se construit
-  jamais : pas de menu d'applications).
+  86px de retrait sur #nextcloud (vérifié sur server.css 33.0.6 : géométrie
+  identique à 32). js/dsfr-header.js y construit bloc-marque et intitulé
+  comme en session (la nav textuelle, elle, ne se construit jamais : pas
+  de menu d'applications).
 *******************************************************************************/
 
 body#body-public #header #nextcloud {
@@ -697,7 +692,8 @@ body#body-public #header .header-info .header-shared-by {
 /* Icône du bouton « Télécharger » : glyphe legacy en background-image
    piloté par filter (--primary-invert-if-bright), hors de portée de
    currentColor et des tokens — le libellé suit le thème, pas elle.
-   Rejouée en masque et colorée par --dsfr-on-primary, comme le libellé. */
+   Rejouée en masque et colorée par --dsfr-on-primary, comme le libellé
+   (composant PublicPageMenu inchangé en 33.0.6). */
 body#body-public #header .public-page-menu__primary-icon.icon-download {
   filter: none !important;
   background: var(--dsfr-on-primary) !important;
