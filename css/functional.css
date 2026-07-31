@@ -222,6 +222,16 @@ SETTINGS: OFFICE
 }
 
 
+/**********************
+SETTINGS: ASSISTANT
+**********************/
+
+/* Hides the whole section (app 'assistant', personal section id 'ai') */
+#app-navigation ul li a[href*="/index.php/settings/user/ai"] {
+  display: none;
+}
+
+
 /********************
 SETTINGS: PRIVACY
 ********************/
