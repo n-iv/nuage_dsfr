@@ -39,13 +39,45 @@ class TemplateListener implements IEventListener {
 		if ($event instanceof BeforeTemplateRenderedEvent) {
 			$this->addFontPreloads();
 			Util::addStyle(Application::APP_ID, 'dsfr');
-			Util::addScript(Application::APP_ID, 'dsfr-header');
+			$this->addEarlyScript();
 			if ($event->isLoggedIn()) {
 				// Couche fonctionnelle (verrous d'exploitation) : en session
 				// uniquement — ses cibles (settings, corbeille) n'existent
 				// pas sur les pages publiques.
 				Util::addStyle(Application::APP_ID, 'functional');
 			}
+		}
+	}
+
+	/**
+	 * dsfr-header.js en <script async> depuis le <head>, plutôt que via
+	 * Util::addScript : la file addScript est différée et s'exécute APRÈS
+	 * les bundles Vue (plusieurs centaines de ms), laissant l'en-tête à
+	 * moitié vide entre deux pages. En async, le script (petit, en cache)
+	 * s'exécute pendant l'analyse du document et construit bloc-marque,
+	 * intitulé et nav dès l'apparition de #header. La CSP des pages
+	 * applicatives contient 'strict-dynamic' : 'self' y est ignoré, le
+	 * NONCE est indispensable (vérifié : sans lui, script bloqué). Le
+	 * gestionnaire de nonce n'a pas d'API publique [VERIF] : repli
+	 * fail-open sur la file addScript (différée, plus tardive) si la
+	 * classe privée bouge. Le ?v= reprend le cache-busting par version
+	 * d'app d'addScript.
+	 */
+	private function addEarlyScript(): void {
+		try {
+			$nonce = \OCP\Server::get(\OC\Security\CSP\ContentSecurityPolicyNonceManager::class)
+				->getNonce();
+			$version = \OCP\Server::get(\OCP\App\IAppManager::class)
+				->getAppVersion(Application::APP_ID);
+			$url = \OCP\Server::get(\OCP\IURLGenerator::class)
+				->linkTo(Application::APP_ID, 'js/dsfr-header.js') . '?v=' . urlencode($version);
+			Util::addHeader('script', [
+				'src' => $url,
+				'async' => 'async',
+				'nonce' => $nonce,
+			], '');
+		} catch (\Throwable $e) {
+			Util::addScript(Application::APP_ID, 'dsfr-header');
 		}
 	}
 

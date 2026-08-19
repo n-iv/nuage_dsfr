@@ -30,6 +30,11 @@
   display:none;
 }
 
+/* Hides the extra actions on the profile entry of the account menu */
+html.ng-csp body#body-user.dsfr-avatar-ready.dsfr-assistant-pending.dsfr-header-ready.dsfr-brand-ready header#header div.header-end nav#user-menu.header-menu.account-menu div#header-menu-user-menu.header-menu__wrapper div.header-menu__content ul.account-menu__list li#profile.list-item__wrapper div.list-item.list-item--compact div.list-item-content__extra-actions {
+  display: none;
+}
+
 
 /*********
   SHARES
@@ -55,9 +60,15 @@ html.ng-csp body#body-user div#content-vue.content.app-files main#app-content-vu
   display:none;
 }
 
-/* Adds a warning for users to know files in their trashbin are automatically purged after 40 days */
-html.ng-csp body#body-user div#content-vue.content.app-files main#app-content-vue.app-content.no-snapper div.files-list__header div.breadcrumb a[href*="/index.php/apps/files/trashbin"]:after {
-  content: "Les éléments de la corbeille sont restaurables pendant 40 jours, puis définitivement supprimés.";
+/* Adds a warning for users to know files in their trashbin are purged
+   automatically (no manual emptying: the button is hidden above).
+   NC33 : le fil d'ariane est devenu un <button> de menu sans href (l'ancien
+   crochet a[href*="trashbin"]:after ne matche plus). La page corbeille se
+   reconnaît à son action « Vider » (data-cy-files-list-action, posée par
+   l'app files même quand le bouton est masqué) : même structure vérifiée
+   en 32.0.8 et 33.0.7, une seule règle pour les deux. */
+html.ng-csp body#body-user .files-list__header:has(button[data-cy-files-list-action="empty-trash"]) div.files-list__breadcrumbs::after {
+  content: "Les fichiers mis à la corbeille sont effacés automatiquement après un délai d'un mois au moins.";
   display: block;
   margin-top: 4px;
   color: var(--color-text-maxcontrast);
@@ -149,8 +160,14 @@ SETTINGS: SECURITY
 SETTINGS: NOTIFICATIONS
 **************************/
 
-/* Hides the parameter to call (app 'talk' not installed) */
-#app-content .settings-section.settings-section--limit-width span.checkbox-radio-switch.checkbox-radio-switch-checkbox:first-of-type + span.checkbox-radio-switch.checkbox-radio-switch-checkbox {
+/* Check this still works at every upgrade! */
+/* Hides the parameter to call (app 'talk' not installed) : masque uniquement
+   la 2e case (« Jouer un son quand un appel est lancé »), la 1re (son de
+   notification) reste visible. NC33 : ancré sur #notifications-user-settings,
+   nouveau wrapper de la section ; l'ancien crochet settings-section--limit-width
+   n'est plus posé par NcSettingsSection (cause de la casse v33). Pas d'ancrage
+   sur l'id du label (checkbox-radio-switch-nc-vue-N-label) : N est auto-généré. */
+#app-content #notifications-user-settings .settings-section span.checkbox-radio-switch.checkbox-radio-switch-checkbox:first-of-type + span.checkbox-radio-switch.checkbox-radio-switch-checkbox {
   display: none;
 }
 
@@ -181,8 +198,11 @@ SETTINGS: MOBILE AND DESKTOP
 SETTINGS: SHARING
 ********************/
 
-/* Hides the possibility to share on social medias */
-#content #app-content .settings-section.settings-section--limit-width .social-button {
+/* Hides the possibility to share on social medias (section « Cloud
+   Fédéré »). NC33 : NcSettingsSection ne pose plus settings-section--limit-width
+   (même cause que le correctif notifications ci-dessus) — aucun .social-button
+   n'a d'usage sur Nuage, le sélecteur large est sans risque. */
+#content #app-content .settings-section .social-button {
   display: none;
 }
 
@@ -258,5 +278,21 @@ SETTINGS: APPEARANCE
 }
 
 #body-settings #app-content .settings-section:has([class*="userPrimaryColor"]) {
+  display: none;
+}
+
+/* Hides the two intro paragraphs of the Appearance section (WCAG pitch and
+   Nextcloud issue tracker / design team links, not relevant on Nuage). Direct
+   children only: theme explanations live deeper (.theming__preview-*). */
+#body-settings #app-content .settings-section.theming > p {
+  display: none;
+}
+
+/* Check this still works at every upgrade! */
+/* Hides the "Navigation bar settings" (app order) section. Two hooks on the
+   same section (CSS-modules class + data-test-id) so one survives a refactor
+   of the other. UI removal only: the app-order API stays served. */
+#body-settings #app-content .settings-section:has([class*="userSectionAppMenu"]),
+#body-settings #app-content .settings-section:has([data-test-id="btn-apporder-reset"]) {
   display: none;
 }

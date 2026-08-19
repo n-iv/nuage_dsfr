@@ -200,6 +200,19 @@ body {
   --dsfr-row1-height: 96px;
   --dsfr-nav-height: 48px;
   --header-height: var(--dsfr-row1-height) !important;
+
+  /* Largeur de la barre de recherche DSFR de la rangée 1 (Section 4bis),
+     calée sur celle d'ia.numerique.gouv.fr (~385px). */
+  --dsfr-search-slot: 24rem;
+
+  /* Conteneur DSFR (fr-container : 78rem centré, gouttières 1rem) : borne
+     le contenu des deux rangées de l'en-tête ; leurs fonds restent pleine
+     largeur, comme le fr-header. Le contenu applicatif (listes de
+     fichiers) reste pleine largeur : usage d'application, pas de site
+     éditorial. 100vw inclut l'ascenseur racine ; sans objet ici (le body
+     Nextcloud ne défile pas, seuls les contenus internes défilent). */
+  --dsfr-container: 78rem;
+  --dsfr-container-margin: max(1rem, calc((100vw - var(--dsfr-container)) / 2));
 }
 
 /* ---- 2e. TYPOGRAPHIE : RAPPEL SUR BODY ----
@@ -220,11 +233,33 @@ body:not([data-theme-opendyslexic]) {
   --font-face: var(--dsfr-font-face) !important;
 }
 
+/* Rayons : même rappel sur body que la fonte ci-dessus — les thèmes
+   explicites redéclarent --border-radius* sur body, et une valeur body
+   non-importante bat l'héritage :root !important : les arrondis
+   changeaient légèrement entre « défaut du système » et thème
+   clair/sombre explicite. */
+body {
+  --border-radius: var(--dsfr-radius) !important;
+  --border-radius-large: var(--dsfr-radius-lg) !important;
+  --border-radius-element: var(--dsfr-radius) !important;
+  --body-container-radius: 0 !important;
+}
+
 body#body-user,
 body#body-settings,
 body#body-public {
   background-image: none !important;
   background-color: var(--dsfr-bg-default) !important;
+}
+
+
+/* Transitions inter-documents : Nextcloud recharge une page entière à
+   chaque changement d'application ; les navigateurs compatibles
+   (Chrome 126+, Safari 18.2+) gardent l'ancien rendu affiché et fondent
+   vers le nouveau au lieu de repeindre à blanc. Sans support (Firefox) :
+   ignoré, comportement inchangé. */
+@view-transition {
+  navigation: auto;
 }
 
 
@@ -381,14 +416,30 @@ body.dsfr-brand-ready #header #nextcloud {
   background: none !important;
   width: auto !important;
 }
-/* Fenêtre de construction JS : logo image masqué pour éviter une bascule */
+/* Premier rendu : le logo du theming (MEN_2025, bloc-marque officiel en
+   image, cf. profile_vars/dsfr.yml) reste visible jusqu'à la bascule
+   dsfr-brand-ready. Servi par le serveur et en cache navigateur, c'est
+   lui qui peint l'en-tête dès le premier rendu : l'ancien masquage
+   « fenêtre de construction JS » (opacity:0 + failopen 2s) laissait un
+   écran blanc systématique à chaque navigation, seule la bordure basse
+   de la rangée 1 restant visible. Calé sur la géométrie du bloc-marque
+   typographique (largeur ~99px, retrait 0.75rem) pour une bascule sans
+   saut ; le #nextcloud de NC fait 86px avec overflow:hidden : sans les
+   overrides ci-dessous, l'image est tronquée à droite. */
+body:not(#body-login):not(.dsfr-brand-ready) #header #nextcloud {
+  width: auto !important;
+  overflow: visible !important;
+  padding-inline-start: 0.75rem !important;
+  padding-block: 0 !important;
+}
 body:not(#body-login):not(.dsfr-brand-ready) #header #nextcloud img,
 body:not(#body-login):not(.dsfr-brand-ready) #header #nextcloud .logo {
-  opacity: 0;
-  animation: dsfr-logo-failopen 0.3s ease 2s forwards;
-}
-@keyframes dsfr-logo-failopen {
-  to { opacity: 1; }
+  width: 6.5625rem !important;
+  height: 5rem !important;   /* ratio de MEN_2025 (1424x1087), corps de
+                                texte aligné sur le bloc typographique */
+  margin-block: auto !important;   /* centrage vertical dans le flex du
+                                      porte-logo : sans lui, l'image se
+                                      calait en haut (saut à la bascule) */
 }
 
 /* ---- ARTWORK OFFICIEL, repris de dsfr.css v1.14 (.fr-logo--sm) ----
@@ -642,6 +693,507 @@ nav.dsfr-nav a.dsfr-nav__item--active:visited {
   }
   .dsfr-service {
     display: none;
+  }
+}
+
+/* ---- LIBELLÉS DES ACTIONS D'EN-TÊTE (rangée 1) ----
+   Le nom de la fonction à droite de l'icône, à la manière des sites
+   institutionnels (impots.gouv.fr). Libellés en contenu généré, jamais en
+   nœuds insérés : les boutons appartiennent à Vue (lecture seule, comme la
+   nav). La syntaxe alternative « content: "…" / "" » les déclare
+   décoratifs : les aria-labels existants des boutons restent seuls dans le
+   nom accessible (pas de doublon lecteur d'écran). Navigateurs sans cette
+   syntaxe (Chrome < 77, Firefox < 113, Safari < 17.4) : déclaration
+   ignorée, icône seule — fail-open assumé, ne PAS doubler d'un content:
+   simple. Aucune couleur propre sur les ::after : currentColor suit les
+   états repos/hover DSFR de la Section 4.
+   Markup réel relevé en session (outillage ~/git/playwright,
+   tools/dump-header.mjs — à refaire au moindre doute plutôt que de
+   deviner) : chaque action est un .header-menu (div, ou nav pour
+   #user-menu) contenant un button.header-menu__trigger anonyme ;
+   l'assistant a un id DUPLIQUÉ (div de montage #assistant + div interne
+   #assistant.header-menu : Vue 3 monte DEDANS sans remplacer le nœud),
+   idem #notifications. Enveloppes, déclencheurs et .button-vue__icon
+   sont calés par NC sur --header-height (96px ici) : en mode deux
+   lignes, TOUTES ces hauteurs doivent être contraintes, sinon la
+   colonne déborde du bandeau (rognage haut/bas).
+   [VERIF] ids #assistant / #notifications / #user-menu, classes
+   .header-menu__trigger, .button-vue__wrapper, .button-vue__icon. */
+@media (min-width: 1024px) {
+  /* Enveloppes à hauteur de contenu (l'id attrape montage + interne) */
+  body.dsfr-header-ready #header .header-end #assistant,
+  body.dsfr-header-ready #header .header-end #notifications,
+  body.dsfr-header-ready #header .header-end #user-menu {
+    width: auto !important;
+    height: auto !important;
+    min-height: 0 !important;
+  }
+  /* Ligne 1 : liens rapides de 44px, icône + libellé */
+  body.dsfr-header-ready #header .header-end #assistant .header-menu__trigger,
+  body.dsfr-header-ready #header .header-end #notifications .header-menu__trigger,
+  body.dsfr-header-ready #header .header-end #user-menu .header-menu__trigger {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: auto !important;
+    height: 2.75rem !important;
+    min-height: 0 !important;
+    padding-inline: 0.375rem 0.75rem !important;
+    border-radius: var(--dsfr-radius) !important;
+  }
+  body.dsfr-header-ready #header .header-end #assistant .header-menu__trigger .button-vue__wrapper,
+  body.dsfr-header-ready #header .header-end #notifications .header-menu__trigger .button-vue__wrapper,
+  body.dsfr-header-ready #header .header-end #user-menu .header-menu__trigger .button-vue__wrapper {
+    width: auto !important;
+    height: 100% !important;
+    min-height: 0 !important;
+  }
+  body.dsfr-header-ready #header .header-end #assistant .header-menu__trigger .button-vue__icon,
+  body.dsfr-header-ready #header .header-end #notifications .header-menu__trigger .button-vue__icon,
+  body.dsfr-header-ready #header .header-end #user-menu .header-menu__trigger .button-vue__icon {
+    width: 2.25rem !important;
+    height: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    flex: 0 0 auto !important;
+  }
+  body.dsfr-header-ready #header .header-end #assistant .header-menu__trigger::after,
+  body.dsfr-header-ready #header .header-end #notifications .header-menu__trigger::after,
+  body.dsfr-header-ready #header .header-end #user-menu .header-menu__trigger::after {
+    margin-inline-start: 0.25rem;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  body.dsfr-header-ready #header .header-end #assistant .header-menu__trigger::after {
+    content: 'Assistant Nuage' / '';
+  }
+  body.dsfr-header-ready #header .header-end #notifications .header-menu__trigger::after {
+    content: 'Notifications' / '';
+  }
+  body.dsfr-header-ready #header .header-end #user-menu .header-menu__trigger::after {
+    content: 'Mon compte' / '';
+  }
+  /* Popovers des menus d'en-tête (cloche, compte) : NC les cale à
+     var(--header-height) sous le HAUT du .header-menu — qui ne fait plus
+     que 2.75rem à ~6px du bord : le menu s'ouvrait détaché, ~50px sous
+     le bandeau. Recalé pour affleurer le bas de la rangée 1 (mêmes
+     constantes que la colonne : groupe 5.625rem centré). */
+  body.dsfr-header-ready #header .header-end .header-menu__wrapper {
+    inset-block-start: calc(var(--dsfr-row1-height) - (var(--dsfr-row1-height) - 5.625rem) / 2) !important;
+    inset-inline-end: var(--dsfr-container-margin) !important;
+  }
+}
+
+/* ---- ESPACES RÉSERVÉS PRÉ-VUE (rangée 1, colonne droite) ----
+   Les points de montage serveur (#unified-search, #notifications,
+   #user-menu, cf. layout.user.php) restent VIDES jusqu'à l'exécution des
+   bundles Vue : leur apparence finale est peinte en CSS pur dès le
+   premier rendu — même dessin, non interactif quelques centaines de ms,
+   à la manière des en-têtes 100% serveur (impots.gouv.fr). Dès que Vue
+   monte, :empty cesse de matcher (ou le div de montage est remplacé) et
+   le composant réel, habillé à l'identique, prend la place sans saut.
+   L'entrée assistant n'a pas de point de montage avant son script :
+   ::before sur header-end tant que #assistant n'existe pas (bascule
+   :has). Icônes mdi identiques aux composants : cloche/compte en masque
+   + currentColor (suivent le thème) ; étincelles et loupe en
+   background (couleurs fixes, transitoires). [VERIF] points de montage
+   et ordre dans layout.user.php. */
+@media (min-width: 1024px) {
+  body.dsfr-header-ready #header .header-end > div#assistant:empty,
+  body.dsfr-header-ready #header .header-end > div#notifications:empty,
+  body.dsfr-header-ready #header .header-end > div#user-menu:empty {
+    display: inline-flex !important;
+    align-items: center !important;
+    height: 2.75rem !important;
+    min-height: 0 !important;
+    width: auto !important;
+    padding-inline: 0.375rem 0.75rem !important;
+  }
+  body.dsfr-header-ready #header .header-end > div#assistant:empty::before,
+  body.dsfr-header-ready #header .header-end > div#notifications:empty::before,
+  body.dsfr-header-ready #header .header-end > div#user-menu:empty::before {
+    content: '';
+    width: 2.25rem;
+    height: 1.25rem;
+    background: var(--dsfr-text-title);
+    -webkit-mask: var(--dsfr-ph-icon) no-repeat center / 1.25rem;
+    mask: var(--dsfr-ph-icon) no-repeat center / 1.25rem;
+  }
+  body.dsfr-header-ready #header .header-end > div#notifications:empty {
+    --dsfr-ph-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M10,21H14A2,2 0 0,1 12,23A2,2 0 0,1 10,21M21,19V20H3V19L5,17V11C5,7.9 7.03,5.17 10,4.29C10,4.19 10,4.1 10,4A2,2 0 0,1 12,2A2,2 0 0,1 14,4C14,4.1 14,4.19 14,4.29C16.97,5.17 19,7.9 19,11V17L21,19M17,11C17,8.24 14.76,6 12,6C9.24,6 7,8.24 7,11V18H17V11Z'/%3E%3C/svg%3E");
+  }
+  body.dsfr-header-ready #header .header-end > div#user-menu:empty {
+    --dsfr-ph-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12,19.2C9.5,19.2 7.29,17.92 6,16C6.03,14 10,12.9 12,12.9C14,12.9 17.97,14 18,16C16.71,17.92 14.5,19.2 12,19.2M12,5A3,3 0 0,1 15,8A3,3 0 0,1 12,11A3,3 0 0,1 9,8A3,3 0 0,1 12,5M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z'/%3E%3C/svg%3E");
+  }
+  body.dsfr-header-ready #header .header-end > div#assistant:empty::after,
+  body.dsfr-header-ready #header .header-end > div#notifications:empty::after,
+  body.dsfr-header-ready #header .header-end > div#user-menu:empty::after {
+    margin-inline-start: 0.25rem;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    white-space: nowrap;
+    color: var(--dsfr-text-title);
+  }
+  body.dsfr-header-ready #header .header-end > div#notifications:empty::after {
+    content: 'Notifications' / '';
+  }
+  body.dsfr-header-ready #header .header-end > div#user-menu:empty::after {
+    content: 'Mon compte' / '';
+  }
+  body.dsfr-header-ready #header .header-end > div#assistant:empty {
+    --dsfr-ph-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M19,1L17.74,3.75L15,5L17.74,6.26L19,9L20.25,6.26L23,5L20.25,3.75M9,4L6.5,9.5L1,12L6.5,14.5L9,20L11.5,14.5L17,12L11.5,9.5M19,15L17.74,17.74L15,19L17.74,20.25L19,23L20.25,20.25L23,19L20.25,17.74'/%3E%3C/svg%3E");
+  }
+  body.dsfr-header-ready #header .header-end > div#assistant:empty::after {
+    content: 'Assistant Nuage' / '';
+  }
+  /* Avatar réel dès le placeholder : URL déterministe posée par le JS
+     (--dsfr-avatar + classe), déjà dans le cache navigateur. */
+  body.dsfr-avatar-ready #header .header-end > div#user-menu:empty::before {
+    width: 2rem;
+    height: 2rem;
+    margin-inline: 0.125rem;
+    border-radius: 50%;
+    background: var(--dsfr-avatar) center / cover no-repeat;
+    -webkit-mask: none;
+    mask: none;
+  }
+  /* Réservation assistant avant même son div de montage : la balise
+     <script> de l'app assistant est dans le document dès l'analyse, son
+     exécution (qui crée div#assistant) passe après les bundles. La
+     classe dsfr-assistant-pending est posée par notre JS uniquement
+     quand l'app est réellement présente. Pseudo-éléments en items flex
+     ordonnés avant les points de montage ; dès que le div apparaît, la
+     bascule :has rend la main au placeholder :empty, identique. */
+  body.dsfr-assistant-pending #header .header-end:not(:has(div#assistant))::before {
+    content: '';
+    order: -3;
+    height: 2.75rem;
+    width: 2.25rem;
+    margin-inline-start: 0.375rem;
+    background: var(--dsfr-text-title);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M19,1L17.74,3.75L15,5L17.74,6.26L19,9L20.25,6.26L23,5L20.25,3.75M9,4L6.5,9.5L1,12L6.5,14.5L9,20L11.5,14.5L17,12L11.5,9.5M19,15L17.74,17.74L15,19L17.74,20.25L19,23L20.25,20.25L23,19L20.25,17.74'/%3E%3C/svg%3E") no-repeat center / 1.25rem;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M19,1L17.74,3.75L15,5L17.74,6.26L19,9L20.25,6.26L23,5L20.25,3.75M9,4L6.5,9.5L1,12L6.5,14.5L9,20L11.5,14.5L17,12L11.5,9.5M19,15L17.74,17.74L15,19L17.74,20.25L19,23L20.25,20.25L23,19L20.25,17.74'/%3E%3C/svg%3E") no-repeat center / 1.25rem;
+  }
+  body.dsfr-assistant-pending #header .header-end:not(:has(div#assistant))::after {
+    content: 'Assistant Nuage' / '';
+    order: -2;
+    display: inline-flex;
+    align-items: center;
+    height: 2.75rem;
+    margin-inline: 0.25rem 0.75rem;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    white-space: nowrap;
+    color: var(--dsfr-text-title);
+  }
+  body.dsfr-header-ready #header .header-end > div#unified-search:empty {
+    position: absolute !important;
+    top: calc((var(--dsfr-row1-height) - 5.625rem) / 2 + 3.125rem);
+    right: 0;
+    display: flex !important;
+    align-items: stretch !important;
+    width: var(--dsfr-search-slot) !important;
+    height: 2.5rem !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    background: var(--dsfr-bg-contrast) !important;
+    border-radius: 0.25rem 0.25rem 0 0 !important;
+    box-shadow: inset 0 -2px 0 0 var(--dsfr-border-strong) !important;
+  }
+  body.dsfr-header-ready #header .header-end > div#unified-search:empty::before {
+    content: 'Rechercher' / '';
+    flex: 1;
+    display: flex;
+    align-items: center;
+    padding-inline: 1rem;
+    font-size: 1rem;
+    font-style: italic;
+    font-weight: 400;
+    color: var(--dsfr-text-mention);
+  }
+  body.dsfr-header-ready #header .header-end > div#unified-search:empty::after {
+    content: '';
+    flex: 0 0 2.5rem;
+    background-color: var(--dsfr-primary);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23ffffff' d='M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 1.25rem;
+    border-radius: 0 0.25rem 0 0;
+  }
+}
+
+/* ---- RECHERCHE : BARRE DSFR SOUS LES LIENS RAPIDES (rangée 1) ----
+   Comme sur ia.numerique.gouv.fr : la colonne droite de la rangée 1 porte
+   les liens rapides en haut et la barre de recherche en dessous. Le
+   header-end passe en flex-wrap ; .unified-search-menu reçoit
+   flex-basis:100% + order pour former la seconde ligne, alignée à droite.
+   Markup réel (dump ~/git/playwright) : .unified-search-menu >
+   div#unified-search.header-menu > button.header-menu__trigger ANONYME —
+   l'id est sur le div, pas sur le bouton. Le bouton unique est habillé en
+   fr-search-bar DSFR : champ contrast + soulignement 2px, faux
+   placeholder « Rechercher » en ::before, carré Bleu France 40px à
+   droite portant la loupe (le carré est .button-vue__wrapper [VERIF] :
+   si cette classe interne change, la barre reste fonctionnelle mais perd
+   le carré bleu). La recherche locale des pages Fichiers s'ouvre, elle,
+   dans la sidebar (app-navigation), déjà stylée en Section 4. */
+@media (min-width: 1024px) {
+  /* Colonne droite : ligne 1 en flux (boutons 2.75rem alignés en haut du
+     groupe centré), la barre de recherche en ABSOLU dans header-end
+     (jamais en flex-basis:100% : un item à basis pleine largeur gonfle
+     la largeur max-content du header-end, qui écrase le header-start et
+     fait replier l'intitulé de service sous le bloc-marque [vérifié sur
+     banc]). L'absolu reste dans le contexte d'empilement du header :
+     peint avec lui. Constantes : ligne 1 2.75rem + écart 0.375rem +
+     ligne 2 2.5rem = 5.625rem, groupe centré dans --dsfr-row1-height. */
+  body.dsfr-header-ready #header .header-end {
+    position: relative !important;
+    align-items: flex-start !important;
+    box-sizing: border-box !important;
+    padding-top: calc((var(--dsfr-row1-height) - 5.625rem) / 2) !important;
+  }
+  body.dsfr-header-ready #header .header-end .unified-search-menu {
+    position: absolute !important;
+    top: calc((var(--dsfr-row1-height) - 5.625rem) / 2 + 3.125rem);
+    right: 0;
+    /* pas de display ici : le style scoped NC (.unified-search-menu[data-v-*])
+       donne déjà flex, sans !important. Un display:flex !important ici
+       entrerait en guerre d'!important avec le display:none du garde
+       dsfr-search-projected (Section 4bis'), qui doit gagner sans
+       ambiguïté quand la recherche locale est projetée. */
+    justify-content: flex-end !important;
+    height: 2.5rem !important;
+    min-height: 0 !important;
+    width: auto !important;
+  }
+  body.dsfr-header-ready #header .header-end #unified-search.header-menu {
+    width: var(--dsfr-search-slot) !important;
+    max-width: 100% !important;
+    height: 2.5rem !important;
+    min-height: 0 !important;
+  }
+  body.dsfr-header-ready #header .header-end #unified-search .header-menu__trigger {
+    display: flex !important;
+    align-items: stretch !important;
+    width: 100% !important;
+    height: 2.5rem !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+    background: var(--dsfr-bg-contrast) !important;
+    border-radius: 0.25rem 0.25rem 0 0 !important;
+    box-shadow: inset 0 -2px 0 0 var(--dsfr-border-strong) !important;
+  }
+  /* Faux placeholder. RGAA « label in name » : l'aria-label du bouton est
+     « Recherche unifiée » ; si un audit le relève, basculer sur
+     « Recherche ». */
+  body.dsfr-header-ready #header .header-end #unified-search .header-menu__trigger::before {
+    content: 'Rechercher' / '';
+    flex: 1;
+    display: flex;
+    align-items: center;
+    padding-inline: 1rem;
+    font-size: 1rem;
+    font-style: italic;
+    font-weight: 400;
+    color: var(--dsfr-text-mention);
+  }
+  /* Carré Bleu France : la loupe passe en blanc via currentColor */
+  body.dsfr-header-ready #header .header-end #unified-search .header-menu__trigger .button-vue__wrapper {
+    flex: 0 0 2.5rem;
+    width: 2.5rem !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    background: var(--dsfr-primary) !important;
+    border-radius: 0 0.25rem 0 0 !important;
+    color: var(--dsfr-on-primary) !important;
+  }
+  body.dsfr-header-ready #header .header-end #unified-search .header-menu__trigger .button-vue__icon {
+    width: 100% !important;
+    height: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+  }
+  body.dsfr-header-ready #header .header-end #unified-search .header-menu__trigger svg {
+    color: var(--dsfr-on-primary) !important;
+    fill: currentColor !important;
+  }
+  /* Neutralise le hover générique de la Section 4 (pilule) au profit d'un
+     hover DSFR : seul le carré bleu s'éclaircit. */
+  body.dsfr-header-ready #header .header-end #unified-search .header-menu__trigger:hover {
+    background-color: var(--dsfr-bg-contrast) !important;
+    color: var(--dsfr-text-title) !important;
+  }
+  body.dsfr-header-ready #header .header-end #unified-search .header-menu__trigger:hover .button-vue__wrapper {
+    background: var(--dsfr-primary-hover) !important;
+  }
+}
+
+/* ---- CONTENEUR DSFR (rangées 1 et 2) ----
+   Fond pleine largeur, contenu borné : marges latérales du fr-container.
+   PAS de garde dsfr-header-ready ici : la classe n'arrive qu'après le
+   montage du menu Vue, et un padding qui l'attendrait ferait sauter le
+   bloc-marque du bord vers la marge à chaque chargement (FOUC). Ces
+   marges sont de l'habillage pur : posées dès le premier rendu, valables
+   aussi en fail-open. Pages publiques comprises : le logo serveur en
+   absolu (géométrie 4ter) est masqué sous dsfr-brand-ready ; en
+   fail-open sans JS il resterait au bord pendant que le texte s'inset —
+   dégradé assumé. Mire sans objet (porte-logo centré). */
+@media (min-width: 1024px) {
+  body#body-user #header,
+  body#body-settings #header,
+  body#body-public #header {
+    padding-inline: var(--dsfr-container-margin) !important;
+  }
+  body.dsfr-header-ready nav.dsfr-nav {
+    padding-inline: var(--dsfr-container-margin);
+  }
+}
+
+/* ---- CONTENEUR DSFR : CONTENU APPLICATIF ----
+   Le contenu applicatif est borné comme l'en-tête. Repère NATIF du cas
+   déjà conteneurisé : la classe app-<id> posée par le serveur sur le
+   conteneur de contenu (layout.user.php) — l'app external (« Aide en
+   ligne », iframe vers un site DSFR portant déjà son fr-container) est
+   exclue et reste pleine largeur. Bornage en largeur seulement : la
+   variable native --body-container-margin borde aussi le BAS du contenu
+   (via --body-height, cf. Section 2d) et laisserait une bande vide sous
+   la page sur écran large. Dans la corbeille, les 8 colonnes ne tiennent
+   pas dans le conteneur : traité en Section 8 (colonnes secondaires
+   masquées), PAS en sortant l'app Fichiers du conteneur — l'alignement
+   global en-tête/contenu doit rester. */
+/* Enfant DIRECT du body uniquement : selon l'appli, le conteneur est
+   #content (gabarit serveur, avec parfois un #content-vue IMBRIQUÉ :
+   Activité, Annonces, Réglages) ou #content-vue seul (Fichiers, racine
+   Vue qui remplace le div serveur). Sans le combinateur enfant, les deux
+   niveaux prendraient chacun la marge : décalage doublé. */
+@media (min-width: 1024px) {
+  body#body-user > #content:not(.app-external),
+  body#body-user > #content-vue:not(.app-external),
+  body#body-settings > #content:not(.app-external),
+  body#body-settings > #content-vue:not(.app-external),
+  body#body-public > #content,
+  body#body-public > #content-vue,
+  body#body-public > footer {
+    margin-inline: var(--dsfr-container-margin) !important;
+    width: calc(100% - var(--dsfr-container-margin) * 2) !important;
+  }
+  /* #content-vue IMBRIQUÉ (Activité, Annonces, Réglages…) : NC le pose en
+     fixed dimensionné sur le viewport — il déborderait à droite du parent
+     borné. Rendu au flux : le parent (#content, déjà borné et calé sous
+     l'en-tête) porte seul la géométrie. */
+  body#body-user > #content:not(.app-external) #content-vue,
+  body#body-settings > #content:not(.app-external) #content-vue,
+  body#body-public > #content #content-vue {
+    position: static !important;
+    width: 100% !important;
+    height: 100% !important;
+    margin: 0 !important;
+  }
+}
+
+/* ---- RECHERCHE LOCALE PROJETÉE DANS LE CRÉNEAU (pages Fichiers) ----
+   Le vrai champ de recherche (NcAppNavigationSearch, en tête de la
+   sidebar : c'est lui que les usages réclament) est DÉPLACÉ dans le
+   header-end par js/dsfr-header.js (projectSearch) : un position:fixed
+   depuis la sidebar n'est pas peint au-dessus du header (vérifié sur
+   banc : témoin fixe invisible quel que soit le z-index — confinement
+   d'empilement du conteneur de navigation). Le nœud déplacé devient un
+   item flex de la colonne droite (order/flex-basis, comme la barre
+   unifiée qu'il remplace) ; Vue garde ses références, le champ reste
+   réactif. La sidebar DSFR ne porte pas de recherche : sa case se
+   referme d'elle-même. La barre unifiée s'efface quand le champ projeté
+   est présent : bascule par la classe body.dsfr-search-projected, posée
+   et retirée par le même code JS qui déplace le nœud. PAS de :has ici :
+   Firefox (mesuré 151) ne réévalue pas :has(.app-navigation__search)
+   quand le nœud est déplacé dans le header - la règle ne s'appliquait
+   qu'après un restyle fortuit, la barre unifiée restait visible.
+   En mobile et en fail-open, le champ reste dans la sidebar avec son
+   habillage Section 4 (classe absente : la barre unifiée reste seule).
+   [VERIF] classes NcAppNavigationSearch :
+   .app-navigation-search, __input, __actions, input-field__input. */
+@media (min-width: 1024px) {
+  body.dsfr-search-projected #header .header-end .unified-search-menu {
+    display: none !important;
+  }
+  /* Conteneur __search projeté à tort avant ce garde-fou, ou vidé par un
+     re-rendu : sans contenu, il ne réserve aucune place. */
+  body.dsfr-header-ready #header .header-end div.app-navigation__search:empty {
+    display: none !important;
+  }
+  body.dsfr-header-ready #header .header-end div.app-navigation__search {
+    position: absolute !important;
+    top: calc((var(--dsfr-row1-height) - 5.625rem) / 2 + 3.125rem);
+    right: 0;
+    display: flex !important;
+    justify-content: flex-end !important;
+    height: 2.5rem !important;
+    min-height: 0 !important;
+    width: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  /* Skin fr-search-bar sur le champ réel */
+  body.dsfr-header-ready #header .header-end div.app-navigation__search div.app-navigation-search {
+    width: var(--dsfr-search-slot) !important;
+    max-width: 100% !important;
+    height: 100% !important;
+    align-items: stretch !important;
+    gap: 0 !important;
+    padding: 0 !important;
+    background: var(--dsfr-bg-contrast) !important;
+    border-radius: 0.25rem 0.25rem 0 0 !important;
+    box-shadow: inset 0 -2px 0 0 var(--dsfr-border-strong) !important;
+    overflow: hidden !important;
+  }
+  body.dsfr-header-ready #header .header-end div.app-navigation__search .app-navigation-search__input,
+  body.dsfr-header-ready #header .header-end div.app-navigation__search .input-field__main-wrapper {
+    height: 100% !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+  }
+  body.dsfr-header-ready #header .header-end div.app-navigation__search input.input-field__input {
+    height: 100% !important;
+    min-height: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    padding-inline: 1rem 0.25rem !important;
+    color: var(--dsfr-text-title) !important;
+  }
+  body.dsfr-header-ready #header .header-end div.app-navigation__search input.input-field__input::placeholder {
+    font-style: italic;
+    color: var(--dsfr-text-mention);
+  }
+  /* Carré Bleu France : le bouton d'actions existant (loupe/portée) */
+  body.dsfr-header-ready #header .header-end div.app-navigation__search .app-navigation-search__actions,
+  body.dsfr-header-ready #header .header-end div.app-navigation__search .app-navigation-search__actions .action-item,
+  body.dsfr-header-ready #header .header-end div.app-navigation__search .app-navigation-search__actions .v-popper {
+    height: 100% !important;
+    min-height: 0 !important;
+    max-height: none !important;   /* NC plafonne à la zone cliquable : le
+                                      carré bleu s'arrêtait avant le bas de
+                                      la barre (jour visible) */
+  }
+  body.dsfr-header-ready #header .header-end div.app-navigation__search .app-navigation-search__actions button {
+    height: 100% !important;
+    width: 2.5rem !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    border-radius: 0 0.25rem 0 0 !important;
+    background-color: var(--dsfr-primary) !important;
+    color: var(--dsfr-on-primary) !important;
+    border: none !important;
+  }
+  body.dsfr-header-ready #header .header-end div.app-navigation__search .app-navigation-search__actions button:hover {
+    background-color: var(--dsfr-primary-hover) !important;
+  }
+  body.dsfr-header-ready #header .header-end div.app-navigation__search .app-navigation-search__actions svg {
+    color: var(--dsfr-on-primary) !important;
+    fill: currentColor !important;
   }
 }
 
@@ -899,6 +1451,22 @@ a:not(.button-vue):visited {
   color: var(--dsfr-primary) !important;
 }
 
+/* Corbeille dans le conteneur DSFR : ses 8 colonnes n'y tiennent pas et la
+   colonne Nom — seule flexible — était peinte à 0px (fichiers sans nom à
+   l'écran, texte pourtant dans le DOM). On rend la place au Nom en
+   masquant les colonnes secondaires : « Supprimé par » (corbeille
+   personnelle : presque toujours « Vous ») et « Modifié » (redondante,
+   la date utile ici est « Supprimé »). « Emplacement original » est
+   conservée (contexte de restauration). Classes dédiées posées par
+   files_trashbin ; le garde :has borne le masquage de mtime aux seules
+   listes portant les colonnes corbeille. */
+.files-list__table th.files-list__row-trashbin-files_trashbin--deleted-by,
+.files-list__table td.files-list__row-trashbin-files_trashbin--deleted-by,
+.files-list__table:has(.files-list__row-trashbin-files_trashbin--deleted) th.files-list__row-mtime,
+.files-list__table:has(.files-list__row-trashbin-files_trashbin--deleted) td.files-list__row-mtime {
+  display: none !important;
+}
+
 .files-list .files-list__row:hover {
   background-color: var(--dsfr-bg-alt) !important;
 }
@@ -1032,4 +1600,39 @@ html {
 }
 .toastify.toast-info {
   background-color: #0063cb !important;
+}
+
+
+/*******************************************************************************
+  SECTION 11 : RÉGLAGES APPARENCE - PREVIEWS DE THÈMES
+  Les vignettes d'origine sont des JPG statiques livrés avec le serveur
+  (/apps/theming/img/{id}.jpg), posés en STYLE INLINE par ThemePreviewItem.vue :
+  seule une déclaration auteur !important peut les battre (ne jamais modifier
+  les JPG du serveur : écrasés à chaque upgrade + contrôle d'intégrité).
+  Captures réelles de l'UI Nuage DSFR (1024x640, ratio 16/10 de la tuile,
+  « défaut » = diagonale clair/sombre comme le default.jpg serveur), prises
+  via l'outillage Playwright (~/git/playwright, tools/capture-previews.mjs) :
+  à régénérer à chaque évolution visible de l'interface. Servies par l'app
+  (img/, statique dans le docroot apps/, comme /themes/nuage/fonts/) ; ces
+  URL n'ont pas le cache-busting par version d'app : incrémenter le ?v= à
+  chaque changement de visuel.
+  opendyslexic est laissé tel quel : l'information discriminante est la fonte,
+  que la vignette serveur montre (priorité RGAA, cf. Section 2e).
+  [VERIF] classes .theming__preview--{id} et mécanique style inline.
+*******************************************************************************/
+
+#body-settings .theming__preview--default .theming__preview-image {
+  background-image: url('/apps/nuage_dsfr/img/theme-default.webp?v=1') !important;
+}
+#body-settings .theming__preview--light .theming__preview-image {
+  background-image: url('/apps/nuage_dsfr/img/theme-light.webp?v=1') !important;
+}
+#body-settings .theming__preview--dark .theming__preview-image {
+  background-image: url('/apps/nuage_dsfr/img/theme-dark.webp?v=1') !important;
+}
+#body-settings .theming__preview--light-highcontrast .theming__preview-image {
+  background-image: url('/apps/nuage_dsfr/img/theme-light-highcontrast.webp?v=1') !important;
+}
+#body-settings .theming__preview--dark-highcontrast .theming__preview-image {
+  background-image: url('/apps/nuage_dsfr/img/theme-dark-highcontrast.webp?v=1') !important;
 }
