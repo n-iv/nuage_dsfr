@@ -68,7 +68,7 @@ html.ng-csp body#body-user div#content-vue.content.app-files main#app-content-vu
    l'app files même quand le bouton est masqué) : même structure vérifiée
    en 32.0.8 et 33.0.7, une seule règle pour les deux. */
 html.ng-csp body#body-user .files-list__header:has(button[data-cy-files-list-action="empty-trash"]) div.files-list__breadcrumbs::after {
-  content: "Les fichiers mis à la corbeille sont effacés automatiquement après un délai d'un mois au moins.";
+  content: "Les fichiers mis à la corbeille sont effacés automatiquement après 90 jours.";
   display: block;
   margin-top: 4px;
   color: var(--color-text-maxcontrast);
