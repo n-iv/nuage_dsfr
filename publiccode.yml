@@ -1,0 +1,43 @@
+publiccodeYmlVersion: "0.4"
+name: nuage_dsfr
+url: https://gitlab.mim-libre.fr/varlotnicolas/nuage_dsfr
+landingURL: https://gitlab.mim-libre.fr/varlotnicolas/nuage_dsfr
+softwareVersion: 33.0.8
+releaseDate: 2026-08-27
+platforms:
+  - web
+categories:
+  - cloud-management
+developmentStatus: stable
+softwareType: addon
+description:
+  fr:
+    shortDescription: Habillage DSFR (thèmes clair et sombre) et en-tête institutionnel pour Nextcloud, développé pour Nuage (ministère de l'Éducation nationale).
+    longDescription: >
+      Application Nextcloud minimale qui applique le Système de Design de l'État (DSFR) à une instance Nextcloud :
+      couche de tokens clair/sombre, typographie Marianne, mire de connexion, pages publiques, et en-tête
+      institutionnel à deux rangées (bloc-marque, intitulé de service, navigation textuelle des applications).
+      Aucun build, aucune dépendance, aucun état : désactivation instantanée par occ app:disable.
+    features:
+      - Thèmes DSFR clair et sombre, contrastes élevés
+      - En-tête deux rangées avec bloc-marque et navigation textuelle
+      - Mire de connexion et pages publiques habillées
+      - Verrous d'exploitation (masquages d'interface) dans une feuille séparée
+legal:
+  license: AGPL-3.0-or-later
+  mainCopyrightOwner: Ministère de l'Éducation nationale
+  repoOwner: Ministère de l'Éducation nationale
+maintenance:
+  type: internal
+  contacts:
+    - name: Nicolas Varlot
+      email: nicolas.varlot@ac-versailles.fr
+localisation:
+  localisationReady: false
+  availableLanguages:
+    - fr
+dependsOn:
+  open:
+    - name: Nextcloud
+      versionMin: "33"
+      versionMax: "33"

@@ -299,12 +299,20 @@ body#body-login #header {
   height: auto !important;
 }
 
+/* color posée sur la boîte : les pages guest sans formulaire (success.php,
+   « Compte connecté » en fin de login flow v2 ; erreurs) n'ont qu'un <p>
+   qui héritait du blanc de la mire Nextcloud : texte invisible sur la
+   boîte blanche (constaté 09/2026). Même règle que guest.css du thème. */
 body#body-login .guest-box {
   background: #ffffff !important;
   border: 1px solid #dddddd !important;
   border-radius: var(--dsfr-radius-lg) !important;
   box-shadow: 0 2px 6px 0 rgba(0, 0, 18, 0.16) !important;
   padding: 2rem !important;
+  color: #161616 !important;
+}
+body#body-login .guest-box p {
+  color: #161616 !important;
 }
 
 body#body-login .guest-box h2,
@@ -316,6 +324,8 @@ body#body-login .guest-box .login-form__headline {
 
 body#body-login .button-vue--vue-primary,
 body#body-login .login-form button[type="submit"],
+body#body-login a.button,
+body#body-login .button.primary,
 body#body-login input[type="submit"] {
   background-color: #000091 !important;
   border-color: #000091 !important;
@@ -327,6 +337,8 @@ body#body-login input[type="submit"] {
 }
 body#body-login .button-vue--vue-primary:hover,
 body#body-login .login-form button[type="submit"]:hover,
+body#body-login a.button:hover,
+body#body-login .button.primary:hover,
 body#body-login input[type="submit"]:hover {
   background-color: #1212ff !important;
   border-color: #1212ff !important;

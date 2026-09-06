@@ -18,6 +18,9 @@ Désactivation instantanée : occ app:disable nuage_dsfr
     <author>Nicolas Varlot</author>
     <namespace>NuageDsfr</namespace>
     <category>customization</category>
+    <website>https://gitlab.mim-libre.fr/varlotnicolas/nuage_dsfr</website>
+    <bugs>https://gitlab.mim-libre.fr/varlotnicolas/nuage_dsfr/-/issues</bugs>
+    <repository type="git">https://gitlab.mim-libre.fr/varlotnicolas/nuage_dsfr.git</repository>
     <dependencies>
         <nextcloud min-version="33" max-version="33"/>
     </dependencies>

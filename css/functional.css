@@ -30,10 +30,10 @@
   display:none;
 }
 
-/* Hides the extra actions on the profile entry of the account menu */
-html.ng-csp body#body-user.dsfr-avatar-ready.dsfr-assistant-pending.dsfr-header-ready.dsfr-brand-ready header#header div.header-end nav#user-menu.header-menu.account-menu div#header-menu-user-menu.header-menu__wrapper div.header-menu__content ul.account-menu__list li#profile.list-item__wrapper div.list-item.list-item--compact div.list-item-content__extra-actions {
-  display: none;
-}
+/* L'action « Afficher le QR code pour la connexion mobile » de l'entrée
+   profil du menu compte (list-item-content__extra-actions) était masquée
+   ici : retiré le 06/09/2026, c'était une erreur (et le sélecteur, lié aux
+   classes d'état du body, ne portait que sur la première page). */
 
 
 /*********
@@ -182,16 +182,10 @@ table.activitysettings tbody:nth-child(4){
 SETTINGS: MOBILE AND DESKTOP
 *******************************/
 
-/* Hides the calendar, contact, download macOS configuration profile */
-.settings-section a[href*="user-sync-calendars"] {
-  display: none !important;
-}
-.settings-section a[href*="user-sync-contacts"] {
-  display: none !important;
-}
-.settings-section a[href*="apple-provisioning.mobileconfig"] {
-  display: none !important;
-}
+/* La section « Mobile et bureau » (liens de synchro agenda/contacts, profil
+   macOS) n'existe plus sur Nuage : absente de la nav et page /sync-clients vide,
+   constaté en 32 et 33 (qualif @D17). Les trois masquages qui la visaient ont
+   été retirés le 06/09/2026 : code mort. */
 
 
 /********************
