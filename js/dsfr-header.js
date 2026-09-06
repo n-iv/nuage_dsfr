@@ -460,7 +460,39 @@
 		return navDone;
 	}
 
+	/**
+	 * Surcharges de traduction (français) de chaînes core dont la formulation
+	 * ne convient pas à Nuage. Le registre @nextcloud/l10n est global et
+	 * partagé : OC.L10N.register fusionne le paquet dans celui de l'app
+	 * (la dernière inscription gagne). core/l10n/fr.js est un script
+	 * synchrone du <head>, donc déjà inscrit à DOMContentLoaded ; les
+	 * composants Vue traduisent au rendu (le dialogue QR à l'ouverture),
+	 * bien après. Fail-open : sans OC.L10N, la traduction d'origine reste.
+	 * [VERIF] les clés sont les chaînes source anglaises exactes du core.
+	 */
+	var FR_OVERRIDES = {
+		'Use {productName} mobile client you want to connect to scan the code':
+			'Scannez le code à l’aide du client mobile que vous souhaitez connecter',
+	};
+
+	function overrideTranslations() {
+		try {
+			var lang = (document.documentElement.lang || '').toLowerCase();
+			if (lang.indexOf('fr') !== 0) {
+				return;
+			}
+			if (window.OC && window.OC.L10N && typeof window.OC.L10N.register === 'function') {
+				window.OC.L10N.register('core', FR_OVERRIDES);
+			}
+		} catch (e) { /* traduction d'origine conservée */ }
+	}
+
 	function start() {
+		if (document.readyState === 'loading') {
+			document.addEventListener('DOMContentLoaded', overrideTranslations);
+		} else {
+			overrideTranslations();
+		}
 		if (apply()) {
 			return;
 		}

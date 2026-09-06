@@ -8,6 +8,7 @@ Toutes les évolutions notables de nuage_dsfr. Le numéro de version suit la bra
 - Menu compte : le bouton « Afficher le QR code pour se connecter à l'application mobile » n'est plus masqué (il l'était par erreur, et seulement sur la première page).
 - Pages guest sans formulaire (« Compte connecté » en fin de login flow, erreurs) : couleur de texte posée sur `.guest-box` et ses paragraphes, boutons `a.button` habillés comme les autres.
 - `functional.css` : retrait des trois masquages de la section « Mobile et bureau », qui n'existe plus (code mort).
+- `dsfr-header.js` : surcharge de traduction (fr) du texte du dialogue QR code : « Scannez le code à l’aide du client mobile que vous souhaitez connecter ».
 
 ## [33.0.8] - 2026-08-27
 
