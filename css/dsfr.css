@@ -618,6 +618,22 @@ div.app-navigation__search button.input-field__trailing-button:hover {
   }
 }
 
+/* Visualiseur (app viewer : PDF via files_pdfviewer, images, vidéos,
+   texte) : NcModal dimensionne son bandeau de titre sur --header-height
+   (.modal-header { height: var(--header-height) }) et le viewer cale son
+   conteneur dessous (.viewer .modal-container { top/bottom:
+   var(--header-height) }). En mode deux rangées la variable vaut 144px
+   (96 + 48) contre 50px natif : bandeau noir triple hauteur au-dessus du
+   PDF, et autant de perdu en bas (constaté le 17/09/2026, pris pour un
+   chapeau Collabora vide). La hauteur d'en-tête DSFR ne concerne que la
+   page, pas une modale plein écran : valeur native restituée à la racine
+   du visualiseur (.modal-mask.viewer), qui la propage à son bandeau et à
+   son conteneur. Collabora (ci-dessous) reste en plein écran.
+   [VERIF] apps/viewer : classe racine .viewer sur .modal-mask. */
+.modal-mask.viewer {
+  --header-height: 50px !important;
+}
+
 /* Éditeur Collabora (viewer, handler richdocuments) : richdocuments vise
    le plein écran en compensant en dur la hauteur d'en-tête.*/
 [data-handler='richdocuments'] .modal-container {
