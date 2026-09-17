@@ -4,6 +4,9 @@ Toutes les évolutions notables de nuage_dsfr. Le numéro de version suit la bra
 
 ## [Non publié]
 
+- Essai : navigation de gauche repliée par défaut sur ordinateur, ouverte au bouton sandwich, état mémorisé dans le navigateur (localStorage) d'une page à l'autre.
+- Essai : au-delà de 1848px de viewport, la navigation et le panneau latéral droit sortent dans les gouttières DSFR (esprit fr-sidemenu) ; le cadre de contenu garde les marges du conteneur et la liste de fichiers s'aligne sur l'en-tête.
+- Corbeille : la colonne « Supprimé par » n'est plus masquée (indispensable dans un dossier partagé) ; seule « Modifié » reste masquée pour laisser sa place au Nom dans le conteneur DSFR.
 - Dépôt public sur gitlab.mim-libre.fr, miroir GitHub, archive de déploiement (`make dist`), licence AGPL-3.0.
 - Menu compte : le bouton « Afficher le QR code pour se connecter à l'application mobile » n'est plus masqué (il l'était par erreur, et seulement sur la première page).
 - Pages guest sans formulaire (« Compte connecté » en fin de login flow, erreurs) : couleur de texte posée sur `.guest-box` et ses paragraphes, boutons `a.button` habillés comme les autres.

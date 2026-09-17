@@ -1106,6 +1106,78 @@ nav.dsfr-nav a.dsfr-nav__item--active:visited {
   }
 }
 
+/* ---- CONTENEUR DSFR : PANNEAUX DANS LES GOUTTIÈRES (essai 17/09/2026) ----
+   Le cadre de contenu garde EXACTEMENT les marges du fr-container ; sur
+   écran large, la navigation et le panneau latéral droit (partage,
+   versions…) en sortent pour se poser dans les gouttières, esprit
+   fr-sidemenu : fond de page, pas de cadre propre. Mécanique : on lève
+   l'overflow:hidden du cadre et on tire chaque panneau dehors par une
+   marge négative de sa largeur ; en flex, cette marge rend l'espace à la
+   zone centrale, qui s'aligne sur le conteneur de l'en-tête.
+   Navigation : marge -300px ouverte COMME fermée (NC ferme déjà par
+   margin-inline-start:-300px, caché sous l'overflow qu'on vient de
+   lever) ; l'état fermé est donc rendu par visibility/opacity, la liste
+   ne bouge jamais. Le bouton de repli (toggle-wrapper, absolu dans le
+   panneau) reste visible pour rouvrir. La bordure droite native
+   doublerait celle que NC pose sur app-content quand la navigation est
+   ouverte : retirée.
+   Panneau droit : sa largeur devient la gouttière (min 300px, plafond
+   natif 500px) pour sortir entièrement ; NC l'anime par margin-inline-end
+   (de -largeur à 0), ce que notre marge fixe neutralise : l'animation
+   passe sur transform (enter/leave-to = translateX(100%)), Vue 2 pose
+   .slide-right-enter (pas -enter-from). Le v-show natif garde l'élément
+   dans le DOM fermé (display:none).
+   Seuil : gouttière d'au moins 300px, soit 78rem + 600px de viewport
+   (1848px à 16px/rem) ; en dessous un panneau à cheval sur le bord
+   serait pire que l'état actuel, rien ne change. Le premier essai du
+   même jour élargissait le cadre via :has(#app-navigation-vue…) : cet id
+   est sur le <nav> intérieur, pas sur le conteneur qui porte
+   .app-navigation--close, donc le cadre restait large navigation
+   repliée. [VERIF] .app-navigation, .app-navigation--close,
+   .app-navigation-toggle-wrapper, .app-navigation--closed (Activité),
+   .app-sidebar, slide-right-*. */
+@media (min-width: 1848px) {
+  /* Deux gabarits (cf. « Conteneur DSFR : contenu applicatif ») : racine
+     Vue seule (Fichiers) ou #content serveur (overflow:clip) avec
+     #content-vue imbriqué (Activité, Annonces) : les deux niveaux
+     doivent laisser déborder. */
+  body#body-user > #content-vue:not(.app-external),
+  body#body-user > #content:not(.app-external),
+  body#body-user > #content:not(.app-external) #content-vue {
+    overflow: visible !important;
+  }
+  body#body-user > :is(#content-vue, #content):not(.app-external) .app-navigation {
+    margin-inline-start: -300px !important;
+    background: transparent !important;
+    backdrop-filter: none !important;
+    border-inline-end: none !important;
+    transition: none !important;
+  }
+  /* Le fondu porte sur le <nav> intérieur, PAS sur le conteneur : une
+     opacité à 0 s'impose à tous les descendants, bouton de repli compris
+     (constaté le 17/09/2026 : bouton sandwich disparu, panneau
+     impossible à rouvrir). Le bouton est frère du <nav>, il reste peint. */
+  body#body-user > :is(#content-vue, #content):not(.app-external) .app-navigation .app-navigation__content {
+    transition: opacity var(--animation-quick), visibility var(--animation-quick);
+  }
+  /* Le cœur (Fichiers) pose .app-navigation--close, la copie de
+     @nextcloud/vue embarquée par Activité pose .app-navigation--closed :
+     les deux. */
+  body#body-user > :is(#content-vue, #content):not(.app-external) .app-navigation:is(.app-navigation--close, .app-navigation--closed) .app-navigation__content {
+    opacity: 0;
+    visibility: hidden;
+  }
+  body#body-user > :is(#content-vue, #content):not(.app-external) .app-sidebar {
+    --app-sidebar-width: min(clamp(300px, 27vw, 500px), var(--dsfr-container-margin));
+    margin-inline-end: calc(-1 * var(--app-sidebar-width)) !important;
+    transition-property: transform !important;
+  }
+  body#body-user > :is(#content-vue, #content):not(.app-external) .app-sidebar.slide-right-enter,
+  body#body-user > :is(#content-vue, #content):not(.app-external) .app-sidebar.slide-right-leave-to {
+    transform: translateX(100%);
+  }
+}
+
 /* ---- RECHERCHE LOCALE PROJETÉE DANS LE CRÉNEAU (pages Fichiers) ----
    Le vrai champ de recherche (NcAppNavigationSearch, en tête de la
    sidebar : c'est lui que les usages réclament) est DÉPLACÉ dans le
@@ -1465,15 +1537,15 @@ a:not(.button-vue):visited {
 
 /* Corbeille dans le conteneur DSFR : ses 8 colonnes n'y tiennent pas et la
    colonne Nom — seule flexible — était peinte à 0px (fichiers sans nom à
-   l'écran, texte pourtant dans le DOM). On rend la place au Nom en
-   masquant les colonnes secondaires : « Supprimé par » (corbeille
-   personnelle : presque toujours « Vous ») et « Modifié » (redondante,
-   la date utile ici est « Supprimé »). « Emplacement original » est
-   conservée (contexte de restauration). Classes dédiées posées par
-   files_trashbin ; le garde :has borne le masquage de mtime aux seules
-   listes portant les colonnes corbeille. */
-.files-list__table th.files-list__row-trashbin-files_trashbin--deleted-by,
-.files-list__table td.files-list__row-trashbin-files_trashbin--deleted-by,
+   l'écran, texte pourtant dans le DOM). On rend de la place au Nom en
+   masquant « Modifié » (redondante, la date utile ici est « Supprimé »).
+   « Supprimé par » est conservée (17/09/2026) : dans un dossier partagé,
+   c'est la seule façon de savoir qui a effacé le fichier — la masquer
+   au motif que c'est « presque toujours Vous » ne vaut que pour la
+   corbeille personnelle. « Emplacement original » est conservée
+   (contexte de restauration). Classe dédiée posée par files_trashbin ;
+   le garde :has borne le masquage de mtime aux seules listes portant
+   les colonnes corbeille. */
 .files-list__table:has(.files-list__row-trashbin-files_trashbin--deleted) th.files-list__row-mtime,
 .files-list__table:has(.files-list__row-trashbin-files_trashbin--deleted) td.files-list__row-mtime {
   display: none !important;

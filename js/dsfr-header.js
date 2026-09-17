@@ -487,11 +487,123 @@
 		} catch (e) { /* traduction d'origine conservée */ }
 	}
 
+	/**
+	 * Navigation de gauche : repliée par défaut sur écran d'ordinateur, et
+	 * état mémorisé dans le navigateur (essai 17/09/2026). NcAppNavigation
+	 * s'ouvre à l'initialisation (open = !isMobile) sans rien persister ;
+	 * il écoute « toggle-navigation » sur le bus d'événements global
+	 * (window._nc_event_bus) et annonce son état par « navigation-toggled »
+	 * (au montage, puis 1,5 animation après chaque bascule). Le bus est
+	 * créé PARESSEUSEMENT au premier abonnement : à DOMContentLoaded il
+	 * peut ne pas exister (ordre perdu une fois sur deux, constaté). On
+	 * attend donc l'apparition du panneau dans le DOM (son mounted a
+	 * tourné : abonné, bus créé), ou tout de suite s'il est déjà là.
+	 * Mémoire : localStorage NAV_STORAGE_KEY = '1' ouvert, '0' replié,
+	 * enregistré à chaque « navigation-toggled » reçu APRÈS une
+	 * interaction (pointerdown/keydown) ; absent = replié. Avant toute
+	 * interaction, un « navigation-toggled » ouvert reçu alors que la
+	 * mémoire dit replié est refermé (réouverture par NC pendant l'init).
+	 * Activité embarque sa propre copie de @nextcloud/vue : mêmes
+	 * événements, classe .app-navigation--closed (avec d) au lieu de
+	 * --close : on lit les deux. Mobile (< 1024px) : NC gère. Fail-open.
+	 * [VERIF] NcAppNavigation : .app-navigation, --close/--closed,
+	 * événements toggle-navigation / navigation-toggled.
+	 */
+	var NAV_DESKTOP_MIN_WIDTH = 1024;
+	var NAV_READY_WINDOW_MS = 4000;
+	var NAV_STORAGE_KEY = 'nuage_dsfr.navigation.open';
+
+	function readNavPreference() {
+		try {
+			return window.localStorage.getItem(NAV_STORAGE_KEY) === '1';
+		} catch (e) {
+			return false;
+		}
+	}
+
+	function writeNavPreference(open) {
+		try {
+			window.localStorage.setItem(NAV_STORAGE_KEY, open ? '1' : '0');
+		} catch (e) { /* stockage indisponible : replié à la prochaine page */ }
+	}
+
+	function isNavOpen(nav) {
+		return !nav.classList.contains('app-navigation--close')
+			&& !nav.classList.contains('app-navigation--closed');
+	}
+
+	function manageNavigation() {
+		try {
+			if (window.innerWidth < NAV_DESKTOP_MIN_WIDTH) {
+				return;
+			}
+			var wantOpen = readNavPreference();
+			var interacted = false;
+			var bus = null;
+			var observer = null;
+
+			var onInteract = function () {
+				interacted = true;
+			};
+			document.addEventListener('pointerdown', onInteract, { capture: true, once: true });
+			document.addEventListener('keydown', onInteract, { capture: true, once: true });
+
+			var onToggled = function (payload) {
+				if (!payload || typeof payload.open !== 'boolean') {
+					return;
+				}
+				if (interacted) {
+					if (window.innerWidth >= NAV_DESKTOP_MIN_WIDTH) {
+						writeNavPreference(payload.open);
+					}
+					return;
+				}
+				if (payload.open && !wantOpen && bus) {
+					bus.emit('toggle-navigation', { open: false });
+				}
+			};
+
+			var ready = function () {
+				var nav = document.querySelector('#content-vue .app-navigation');
+				bus = window._nc_event_bus || null;
+				if (!nav || !bus || typeof bus.emit !== 'function' || typeof bus.subscribe !== 'function') {
+					return false;
+				}
+				bus.subscribe('navigation-toggled', onToggled);
+				if (!interacted && !wantOpen && isNavOpen(nav)) {
+					bus.emit('toggle-navigation', { open: false });
+				}
+				return true;
+			};
+
+			if (!ready() && document.body) {
+				observer = new MutationObserver(function () {
+					if (ready() && observer) {
+						observer.disconnect();
+						observer = null;
+					}
+				});
+				observer.observe(document.body, { childList: true, subtree: true });
+				window.setTimeout(function () {
+					if (observer) {
+						observer.disconnect();
+						observer = null;
+					}
+				}, NAV_READY_WINDOW_MS);
+			}
+		} catch (e) { /* navigation d'origine */ }
+	}
+
+	function onDomReady() {
+		overrideTranslations();
+		manageNavigation();
+	}
+
 	function start() {
 		if (document.readyState === 'loading') {
-			document.addEventListener('DOMContentLoaded', overrideTranslations);
+			document.addEventListener('DOMContentLoaded', onDomReady);
 		} else {
-			overrideTranslations();
+			onDomReady();
 		}
 		if (apply()) {
 			return;
