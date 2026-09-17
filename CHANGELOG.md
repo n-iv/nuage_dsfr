@@ -4,6 +4,7 @@ Toutes les évolutions notables de nuage_dsfr. Le numéro de version suit la bra
 
 ## [Non publié]
 
+- Essai : vue « Partagés par lien » avec une colonne « Expire le » triable (date la plus proche parmi les liens du fichier) et une action « Prolonger à 365 jours », en ligne et en lot, qui repousse tous les liens du fichier (API OCS ; appuis privés de @nextcloud/files v4) ; colonne Taille masquée dans cette vue.
 - Visualiseur (PDF, images, vidéos) : bandeau de titre et marges du conteneur ramenés à la hauteur d'en-tête native (50px) au lieu des 144px du mode deux rangées ; le « chapeau » noir au-dessus des PDF disparaît.
 - Essai : navigation de gauche repliée par défaut sur ordinateur, ouverte au bouton sandwich, état mémorisé dans le navigateur (localStorage) d'une page à l'autre.
 - Essai : au-delà de 1848px de viewport, la navigation et le panneau latéral droit sortent dans les gouttières DSFR (esprit fr-sidemenu) ; le cadre de contenu garde les marges du conteneur et la liste de fichiers s'aligne sur l'en-tête.

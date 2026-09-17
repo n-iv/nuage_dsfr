@@ -594,9 +594,374 @@
 		} catch (e) { /* navigation d'origine */ }
 	}
 
+	/**
+	 * Vue « Partagés par lien » (/apps/files/sharinglinks) : colonne
+	 * « Expire le » et action « Prolonger à 365 jours » (essai 17/09/2026).
+	 * Politique nuage : expiration obligatoire, 365 jours au plus
+	 * (shareapi_enforce_expire_date, shareapi_expire_after_n_days).
+	 * Appuis, tous PRIVÉS (@nextcloud/files v4, objet global
+	 * window._nc_files_scope.v4_0, à revérifier à chaque version majeure) :
+	 *  - navigation.views : la vue sharinglinks, columns = tableau nu que
+	 *    la liste relit à chaque rendu ; une colonne = {id, title,
+	 *    render(node, view), sort(a, b)} ;
+	 *  - view._view.getContents : enveloppé pour charger, en parallèle,
+	 *    tous les partages sortants par lien (un seul GET OCS) : la vue
+	 *    regroupe ses lignes PAR FICHIER (première entrée gardée), on
+	 *    recalcule donc par fichier la liste des liens et l'expiration la
+	 *    plus PROCHE, base du renouvellement ;
+	 *  - fileActions : Map id -> action ; contexte v4 {nodes, view,
+	 *    folder, contents} passé à enabled/displayName/iconSvgInline/
+	 *    exec/execBatch/inline ; la liste met en cache getFileActions()
+	 *    et se rafraîchit sur l'événement register:action du registry.
+	 * Renouvellement : PUT OCS shares/{id} expireDate=aujourd'hui+365 sur
+	 * CHAQUE lien du fichier, puis rechargement de la liste (voir
+	 * refreshLinksListing). Fail-open partout : sans scope, vue native.
+	 * [VERIF] _nc_files_scope.v4_0.{navigation,fileActions,registry},
+	 * view._view, champs OCS file_source/expiration/share_type.
+	 */
+	var LINKS_VIEW_ID = 'sharinglinks';
+	var LINKS_SCOPE_VERSION = 'v4_0';
+	var LINKS_DAYS = 365;
+	var LINKS_SOON_DAYS = 30;
+	var LINKS_POLL_MS = 200;
+	var LINKS_POLL_MAX_MS = 15000;
+	var LINKS_COLUMN_ID = 'dsfr-expiration';
+	var LINKS_ACTION_ID = 'dsfr-extend-links';
+	var LINKS_ICON = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="currentColor" d="M19 3h-1V1h-2v2H8V1H6v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2m0 16H5V8h14zM12 10.5a3.5 3.5 0 0 1 3.06 1.8l1.44-1.44V15h-4.14l1.5-1.5a1.98 1.98 0 0 0-1.86-1.3 2 2 0 0 0-2 2 2 2 0 0 0 2 2c.7 0 1.3-.36 1.66-.9l1.3.85A3.5 3.5 0 1 1 12 10.5"/></svg>';
+
+	/* fileid -> { shares: [{id, expiration}], earliest: Date|null, undated: n } */
+	var linkInfoByFileId = {};
+
+	function filesScope() {
+		var root = window._nc_files_scope;
+		return root && root[LINKS_SCOPE_VERSION] ? root[LINKS_SCOPE_VERSION] : null;
+	}
+
+	function ocsSharesUrl(suffix) {
+		var base = (window.OC && typeof window.OC.getRootPath === 'function') ? window.OC.getRootPath() : '';
+		return base + '/ocs/v2.php/apps/files_sharing/api/v1/shares' + (suffix || '');
+	}
+
+	function ocsHeaders() {
+		var h = { 'OCS-APIRequest': 'true', 'Accept': 'application/json' };
+		if (window.OC && window.OC.requestToken) {
+			h.requesttoken = window.OC.requestToken;
+		}
+		return h;
+	}
+
+	function parseOcsDate(value) {
+		if (!value || typeof value !== 'string') {
+			return null;
+		}
+		var d = new Date(value.replace(' ', 'T'));
+		return isNaN(d.getTime()) ? null : d;
+	}
+
+	function formatDate(d) {
+		try {
+			return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+		} catch (e) {
+			return d.toISOString().slice(0, 10);
+		}
+	}
+
+	function daysUntil(d) {
+		var today = new Date();
+		today.setHours(0, 0, 0, 0);
+		return Math.round((d.getTime() - today.getTime()) / 86400000);
+	}
+
+	function isoDateInDays(n) {
+		var d = new Date();
+		d.setHours(12, 0, 0, 0);
+		d.setDate(d.getDate() + n);
+		var m = String(d.getMonth() + 1), day = String(d.getDate());
+		return d.getFullYear() + '-' + (m.length < 2 ? '0' + m : m) + '-' + (day.length < 2 ? '0' + day : day);
+	}
+
+	function buildLinkInfo(entries) {
+		var byFile = {};
+		entries.forEach(function (e) {
+			if (!e || Number(e.share_type) !== 3) {
+				return;
+			}
+			var fileId = String(e.file_source || e.item_source || '');
+			if (!fileId) {
+				return;
+			}
+			var info = byFile[fileId] || (byFile[fileId] = { shares: [], earliest: null, undated: 0 });
+			var exp = parseOcsDate(e.expiration);
+			info.shares.push({ id: String(e.id), expiration: exp });
+			if (exp) {
+				if (!info.earliest || exp < info.earliest) {
+					info.earliest = exp;
+				}
+			} else {
+				info.undated += 1;
+			}
+		});
+		return byFile;
+	}
+
+	function loadLinkInfo() {
+		return window.fetch(ocsSharesUrl('?format=json&shared_with_me=false'), {
+			credentials: 'same-origin',
+			headers: ocsHeaders(),
+		}).then(function (r) {
+			if (!r.ok) {
+				throw new Error('OCS ' + r.status);
+			}
+			return r.json();
+		}).then(function (json) {
+			var data = json && json.ocs && json.ocs.data;
+			linkInfoByFileId = buildLinkInfo(Array.isArray(data) ? data : []);
+			return linkInfoByFileId;
+		});
+	}
+
+	function linkInfoOf(node) {
+		if (!node) {
+			return null;
+		}
+		var info = linkInfoByFileId[String(node.fileid)];
+		if (info) {
+			return info;
+		}
+		// Repli : attributs de la première entrée OCS recopiés par files_sharing.
+		var attrs = node.attributes || {};
+		var shareId = attrs['share-id'] || attrs.id;
+		if (!shareId) {
+			return null;
+		}
+		var exp = parseOcsDate(attrs.expiration);
+		return { shares: [{ id: String(shareId), expiration: exp }], earliest: exp, undated: exp ? 0 : 1 };
+	}
+
+	function renderExpiration(node) {
+		var el = document.createElement('span');
+		el.className = 'dsfr-expiration';
+		var info = linkInfoOf(node);
+		if (!info || info.shares.length === 0) {
+			el.textContent = '';
+			return el;
+		}
+		var parts = [];
+		if (info.earliest) {
+			var days = daysUntil(info.earliest);
+			el.textContent = formatDate(info.earliest);
+			if (days < 0) {
+				el.classList.add('dsfr-expiration--expired');
+				parts.push('expiré');
+			} else if (days <= LINKS_SOON_DAYS) {
+				el.classList.add('dsfr-expiration--soon');
+				parts.push('dans ' + days + ' jour' + (days > 1 ? 's' : ''));
+			} else {
+				parts.push('dans ' + days + ' jours');
+			}
+		} else {
+			el.textContent = 'sans date';
+			el.classList.add('dsfr-expiration--undated');
+		}
+		if (info.shares.length > 1) {
+			parts.push(info.shares.length + ' liens, date la plus proche affichée');
+		}
+		if (info.undated > 0 && info.earliest) {
+			parts.push(info.undated + ' lien' + (info.undated > 1 ? 's' : '') + ' sans date');
+		}
+		el.title = parts.join(' · ');
+		return el;
+	}
+
+	function expirationSortKey(node) {
+		var info = linkInfoOf(node);
+		if (!info || !info.earliest) {
+			return Number.MAX_SAFE_INTEGER;
+		}
+		return info.earliest.getTime();
+	}
+
+	function extendShare(shareId, isoDate) {
+		return window.fetch(ocsSharesUrl('/' + encodeURIComponent(shareId) + '?format=json'), {
+			method: 'PUT',
+			credentials: 'same-origin',
+			headers: Object.assign({ 'Content-Type': 'application/x-www-form-urlencoded' }, ocsHeaders()),
+			body: 'expireDate=' + encodeURIComponent(isoDate),
+		}).then(function (r) {
+			return r.json().catch(function () { return null; }).then(function (json) {
+				var meta = json && json.ocs && json.ocs.meta;
+				if (!r.ok || !meta || Number(meta.statuscode) !== 200) {
+					throw new Error((meta && meta.message) || ('OCS ' + r.status));
+				}
+				return true;
+			});
+		});
+	}
+
+	function toast(kind, message) {
+		try {
+			if (window.OCP && window.OCP.Toast && typeof window.OCP.Toast[kind] === 'function') {
+				window.OCP.Toast[kind](message);
+			}
+		} catch (e) { /* silencieux */ }
+	}
+
+	function extendNodeLinks(node) {
+		var info = linkInfoOf(node);
+		if (!info || info.shares.length === 0) {
+			return Promise.resolve(null);
+		}
+		var isoDate = isoDateInDays(LINKS_DAYS);
+		var name = node.displayname || node.basename || '';
+		return Promise.all(info.shares.map(function (sh) {
+			return extendShare(sh.id, isoDate);
+		})).then(function () {
+			var d = new Date(isoDate + 'T12:00:00');
+			info.shares.forEach(function (sh) { sh.expiration = d; });
+			info.earliest = d;
+			info.undated = 0;
+			linkInfoByFileId[String(node.fileid)] = info;
+			toast('success', (info.shares.length > 1 ? info.shares.length + ' liens prolongés' : 'Lien prolongé') + ' jusqu’au ' + formatDate(d) + ' : ' + name);
+			return true;
+		}, function (err) {
+			toast('error', 'Prolongation impossible pour ' + name + ' : ' + (err && err.message ? err.message : 'erreur'));
+			return false;
+		});
+	}
+
+	function isLinksView(ctx) {
+		return !!(ctx && ctx.view && ctx.view.id === LINKS_VIEW_ID);
+	}
+
+	var extendLinksAction = {
+		id: LINKS_ACTION_ID,
+		order: -10,
+		displayName: function () { return 'Prolonger à ' + LINKS_DAYS + ' jours'; },
+		title: function (ctx) {
+			var n = ctx && ctx.nodes ? ctx.nodes.length : 0;
+			return n > 1 ? 'Prolonger les liens de ' + n + ' fichiers à ' + LINKS_DAYS + ' jours' : 'Prolonger tous les liens de ce fichier à ' + LINKS_DAYS + ' jours';
+		},
+		iconSvgInline: function () { return LINKS_ICON; },
+		enabled: function (ctx) {
+			if (!isLinksView(ctx) || !ctx.nodes || ctx.nodes.length === 0) {
+				return false;
+			}
+			return ctx.nodes.every(function (n) { var i = linkInfoOf(n); return !!(i && i.shares.length); });
+		},
+		inline: function (ctx) { return isLinksView(ctx); },
+		exec: function (ctx) {
+			return extendNodeLinks(ctx.nodes[0]).then(function (ok) {
+				refreshLinksListing(ctx);
+				return ok;
+			});
+		},
+		execBatch: function (ctx) {
+			return Promise.all(ctx.nodes.map(extendNodeLinks)).then(function (results) {
+				refreshLinksListing(ctx);
+				return results;
+			});
+		},
+	};
+
+	/* La cellule d'une colonne personnalisée (CustomElementRender) n'est
+	   repeinte que si le nœud change ; nos dates vivent à côté du nœud.
+	   Rechargement de la liste : FilesList.onUpdatedNode relance
+	   fetchContent quand le nœud annoncé est le DOSSIER courant (celui du
+	   contexte d'action ; dans cette vue, un Folder d'id 0), ce qui rejoue
+	   getContents enveloppé, donc l'appel OCS des liens, et repeint toutes
+	   les lignes. Une seule fois par action, après le dernier PUT. */
+	function refreshLinksListing(ctx) {
+		try {
+			var bus = window._nc_event_bus;
+			if (ctx && ctx.folder && bus && typeof bus.emit === 'function') {
+				bus.emit('files:node:updated', ctx.folder);
+			}
+		} catch (e) { /* la liste se repeindra au prochain chargement */ }
+	}
+
+	var expirationColumn = {
+		id: LINKS_COLUMN_ID,
+		title: 'Expire le',
+		render: function (node) { return renderExpiration(node); },
+		sort: function (a, b) { return expirationSortKey(a) - expirationSortKey(b); },
+	};
+
+	function registerLinksAction(scope) {
+		if (!scope.fileActions) {
+			scope.fileActions = new Map();
+		}
+		if (scope.fileActions.has(LINKS_ACTION_ID)) {
+			return;
+		}
+		scope.fileActions.set(LINKS_ACTION_ID, extendLinksAction);
+		try {
+			var reg = scope.registry;
+			if (reg && typeof reg.dispatchTypedEvent === 'function') {
+				reg.dispatchTypedEvent('register:action', new CustomEvent('register:action', { detail: extendLinksAction }));
+			} else if (reg && typeof reg.dispatchEvent === 'function') {
+				reg.dispatchEvent(new CustomEvent('register:action', { detail: extendLinksAction }));
+			}
+		} catch (e) { /* la liste relira le registre au prochain montage */ }
+	}
+
+	function decorateLinksView(view) {
+		if (!view || !Array.isArray(view.columns)) {
+			return false;
+		}
+		if (!view.columns.some(function (c) { return c && c.id === LINKS_COLUMN_ID; })) {
+			view.columns.push(expirationColumn);
+		}
+		var inner = view._view;
+		if (inner && typeof inner.getContents === 'function' && !inner.__dsfrLinksWrapped) {
+			var original = inner.getContents;
+			inner.getContents = function () {
+				var args = arguments;
+				return Promise.all([
+					original.apply(this, args),
+					loadLinkInfo().catch(function () { return null; }),
+				]).then(function (results) { return results[0]; });
+			};
+			inner.__dsfrLinksWrapped = true;
+		}
+		return true;
+	}
+
+	function setupLinksView() {
+		try {
+			if (!document.body || document.body.id !== 'body-user') {
+				return;
+			}
+			var started = Date.now();
+			var timer = window.setInterval(function () {
+				try {
+					var scope = filesScope();
+					if (scope) {
+						registerLinksAction(scope);
+						var nav = scope.navigation;
+						var views = nav && nav.views;
+						if (Array.isArray(views)) {
+							var view = views.find(function (v) { return v && v.id === LINKS_VIEW_ID; });
+							if (view && decorateLinksView(view)) {
+								window.clearInterval(timer);
+								return;
+							}
+						}
+					}
+				} catch (e) {
+					window.clearInterval(timer);
+					return;
+				}
+				if (Date.now() - started > LINKS_POLL_MAX_MS) {
+					window.clearInterval(timer);
+				}
+			}, LINKS_POLL_MS);
+		} catch (e) { /* vue native */ }
+	}
+
 	function onDomReady() {
 		overrideTranslations();
 		manageNavigation();
+		setupLinksView();
 	}
 
 	function start() {

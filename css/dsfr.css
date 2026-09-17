@@ -1194,6 +1194,34 @@ nav.dsfr-nav a.dsfr-nav__item--active:visited {
   }
 }
 
+/* ---- VUE « PARTAGÉS PAR LIEN » : colonne Expire le (js/dsfr-header.js) ----
+   Cellule de la colonne ajoutée par le thème ; classe de cellule
+   files-list__row-<vue>-<colonne> posée par la liste. Couleurs DSFR
+   warning (#b34000) et error (#ce0500). */
+.files-list__row-sharinglinks-dsfr-expiration {
+  width: 9rem !important;
+  white-space: nowrap;
+}
+/* Dans cette vue seulement (garde :has sur la cellule ajoutée, présente
+   en en-tête comme en ligne), la colonne Taille est masquée pour laisser
+   la place au Nom et à l'échéance. Même mécanique que la corbeille. */
+.files-list__table:has(.files-list__row-sharinglinks-dsfr-expiration) th.files-list__row-size,
+.files-list__table:has(.files-list__row-sharinglinks-dsfr-expiration) td.files-list__row-size {
+  display: none !important;
+}
+.dsfr-expiration--soon {
+  color: #b34000;
+  font-weight: 700;
+}
+.dsfr-expiration--expired {
+  color: #ce0500;
+  font-weight: 700;
+}
+.dsfr-expiration--undated {
+  color: var(--dsfr-text-mention, #666);
+  font-style: italic;
+}
+
 /* ---- RECHERCHE LOCALE PROJETÉE DANS LE CRÉNEAU (pages Fichiers) ----
    Le vrai champ de recherche (NcAppNavigationSearch, en tête de la
    sidebar : c'est lui que les usages réclament) est DÉPLACÉ dans le
