@@ -412,7 +412,13 @@
 	 * déterministe /avatar/<uid>/64, déjà dans le cache navigateur) et
 	 * présence de l'app assistant (sa balise <script> est dans le
 	 * document bien avant son exécution, qui crée div#assistant après
-	 * les bundles). Idempotent, fail-open.
+	 * les bundles). Seul assistant-main crée l'entrée d'en-tête, et
+	 * l'app ne le sert qu'en session (RENDER_AS_USER + utilisateur) ;
+	 * ses autres scripts (références de fichiers, actions de fichiers)
+	 * sont aussi servis sur les pages publiques, où div#assistant
+	 * n'apparaît jamais : tester « n'importe quel script assistant »
+	 * y peignait un « Assistant Nuage » fantôme à vie. Idempotent,
+	 * fail-open.
 	 */
 	function primePlaceholders() {
 		try {
@@ -424,7 +430,8 @@
 				);
 				document.body.classList.add('dsfr-avatar-ready');
 			}
-			if (document.querySelector('script[src*="/apps/assistant/"]')) {
+			if (document.body.id !== 'body-public'
+				&& document.querySelector('script[src*="/apps/assistant/js/assistant-main"]')) {
 				document.body.classList.add('dsfr-assistant-pending');
 			}
 		} catch (e) { /* placeholders génériques conservés */ }

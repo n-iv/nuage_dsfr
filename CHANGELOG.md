@@ -4,6 +4,7 @@ Toutes les évolutions notables de nuage_dsfr. Le numéro de version suit la bra
 
 ## [Non publié]
 
+- Pages de partage public : un « Assistant Nuage » fantôme (icône + libellé, inerte) restait peint dans l'en-tête. Cause : la réservation pré-Vue de l'entrée assistant se déclenchait sur n'importe quel script de l'app (elle sert ses scripts de références de fichiers sur les pages publiques) alors que seul `assistant-main`, servi en session uniquement, crée `div#assistant`. Le test JS ne vise plus que `assistant-main` hors `body-public`, et la règle CSS est conditionnée à `dsfr-header-ready` comme les autres espaces réservés ; rien ne change en session (même instant de peinture).
 - Essai : vue « Partagés par lien » avec une colonne « Expire le » triable (date la plus proche parmi les liens du fichier) et une action « Prolonger à 365 jours », en ligne et en lot, qui repousse tous les liens du fichier (API OCS ; appuis privés de @nextcloud/files v4) ; colonne Taille masquée dans cette vue.
 - Visualiseur (PDF, images, vidéos) : bandeau de titre et marges du conteneur ramenés à la hauteur d'en-tête native (50px) au lieu des 144px du mode deux rangées ; le « chapeau » noir au-dessus des PDF disparaît.
 - Essai : navigation de gauche repliée par défaut sur ordinateur, ouverte au bouton sandwich, état mémorisé dans le navigateur (localStorage) d'une page à l'autre.
