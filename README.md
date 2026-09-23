@@ -8,6 +8,31 @@ Application Nextcloud minimale : un manifeste, un listener, deux feuilles de sty
 - Miroir : <https://github.com/n-iv/nuage_dsfr>
 - Licence : AGPL-3.0-or-later (voir `COPYING`)
 
+## Aperçu
+
+Nextcloud 33 sur nuage21 (septembre 2026) : bloc-marque, intitulé de service, actions libellées, barre de recherche DSFR et navigation textuelle des applications.
+
+![Fichiers sur nuage21, thème clair, panneau latéral ouvert](docs/fichiers-nuage21.webp)
+
+Les actions groupées reprennent le style DSFR (ici le bouton « Prolonger à 365 jours » sur les partages par lien) :
+
+![Partages par lien, sélection multiple](docs/partages-par-lien-nuage21.webp)
+
+Les previews servies dans Apparence et accessibilité sont de vraies captures de l'interface. Celle du thème système montre les deux thèmes d'un coup :
+
+![Preview du thème système : clair et sombre séparés par une diagonale](img/theme-default.webp)
+
+<table>
+  <tr>
+    <td><img src="img/theme-light.webp" alt="Thème clair"></td>
+    <td><img src="img/theme-dark.webp" alt="Thème sombre"></td>
+  </tr>
+  <tr>
+    <td><img src="img/theme-light-highcontrast.webp" alt="Thème clair à contraste élevé"></td>
+    <td><img src="img/theme-dark-highcontrast.webp" alt="Thème sombre à contraste élevé"></td>
+  </tr>
+</table>
+
 ## Ce que fait l'app
 
 - **Tokens DSFR** clair/sombre (et contrastes élevés) appliqués par-dessus les variables CSS de Nextcloud : couleurs, rayons, typographie Marianne.
@@ -45,7 +70,8 @@ Le numéro de version de `appinfo/info.xml` sert de cache-busting des URL css/js
 - `lib/` : enregistre un listener sur `BeforeTemplateRenderedEvent` (pages en session et pages publiques) et `BeforeLoginTemplateRenderedEvent` (mire). Le script d'en-tête est injecté en `<script async>` depuis le `<head>` avec le nonce CSP (la file `addScript` s'exécute après les bundles Vue, trop tard pour éviter un en-tête à moitié vide entre deux pages) ; repli fail-open sur `addScript` si le gestionnaire de nonce (classe privée) change.
 - `css/dsfr.css` : tokens clair/sombre, mire (Section 3), en-tête rangée 1 (Section 4), en-tête deux rangées et barre de recherche (Section 4bis, gardée par la classe body `dsfr-header-ready`), pages publiques (4ter), previews de thèmes (Section 11).
 - `css/functional.css` : verrous d'exploitation, en session uniquement.
-- `img/` : previews de thèmes `theme-{id}.webp`, captures réelles de l'interface à régénérer à chaque évolution visible. Servies sous `/apps/nuage_dsfr/img/` avec un `?v=` manuel à incrémenter (pas de cache-busting par version d'app sur ces URL).
+- `img/` : previews de thèmes `theme-{id}.webp`, captures réelles de l'interface à régénérer à chaque évolution visible (elles servent aussi d'illustration au README). Servies sous `/apps/nuage_dsfr/img/` avec un `?v=` manuel à incrémenter (pas de cache-busting par version d'app sur ces URL).
+- `docs/` : captures pour le README, exclues de l'archive.
 - `js/dsfr-header.js` : construit le bloc-marque et l'intitulé de service (`OC.theming.name`, `window._theme.slogan`), puis la navigation textuelle en **lisant** l'état initial serveur (`#initial-state-core-apps`, repli sur le menu Vue) sans jamais modifier le menu d'applications. Les libellés d'actions (« Notifications », « Mon compte »…) sont du contenu généré CSS : aucun nœud inséré dans le DOM Vue. Exception assumée : `projectSearch()` **déplace** (sans cloner) le champ de recherche local de la sidebar (`NcAppNavigationSearch`) dans la colonne droite de l'en-tête ; le nœud reste réactif pour Vue, un jalon marque l'origine pour restitution (mobile, ou re-rendu Vue qui recrée un champ côté sidebar), observateur sur `body`. Un `position:fixed` depuis la sidebar n'est pas peint au-dessus du header (confinement d'empilement) : le déplacement est le seul chemin. Sans champ local, la barre unifiée, habillée pareil, sert de repli.
 
 ## Recette à chaque montée de version Nextcloud

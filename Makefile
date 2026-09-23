@@ -37,6 +37,7 @@ dist: clean lint
 		--exclude=/build \
 		--exclude=/Makefile \
 		--exclude=/publiccode.yml \
+		--exclude=/docs \
 		./ $(stage_dir)/$(app_name)/
 	tar -czf $(archive) -C $(stage_dir) $(app_name)
 	rm -rf $(stage_dir)
