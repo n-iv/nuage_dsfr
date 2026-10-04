@@ -513,12 +513,23 @@
 	 * Activité embarque sa propre copie de @nextcloud/vue : mêmes
 	 * événements, classe .app-navigation--closed (avec d) au lieu de
 	 * --close : on lit les deux. Mobile (< 1024px) : NC gère. Fail-open.
+	 * Premier rendu (04/10/2026) : NcAppNavigation se monte TOUJOURS ouvert
+	 * et notre fermeture arrive après, animée (transition margin de NC,
+	 * tiroir ≥ 1848px) : le panneau apparaissait furtivement à chaque
+	 * chargement de page. presetNavigation(), appelé dès l'exécution du
+	 * script (async depuis le <head>, bien avant tout montage Vue), pose
+	 * html.dsfr-nav-closed quand la mémoire dit replié ; css/dsfr.css y
+	 * impose l'état replié sans transition. La classe est retirée dès que
+	 * NC a réellement replié (« navigation-toggled » fermé), à la première
+	 * interaction, ou à l'échéance de NAV_READY_WINDOW_MS (fail-open) :
+	 * l'état forcé et l'état réel sont alors identiques, rien ne bouge.
 	 * [VERIF] NcAppNavigation : .app-navigation, --close/--closed,
 	 * événements toggle-navigation / navigation-toggled.
 	 */
 	var NAV_DESKTOP_MIN_WIDTH = 1024;
 	var NAV_READY_WINDOW_MS = 4000;
 	var NAV_STORAGE_KEY = 'nuage_dsfr.navigation.open';
+	var NAV_PRESET_CLASS = 'dsfr-nav-closed';
 
 	function readNavPreference() {
 		try {
@@ -539,18 +550,35 @@
 			&& !nav.classList.contains('app-navigation--closed');
 	}
 
+	function presetNavigation() {
+		try {
+			if (window.innerWidth >= NAV_DESKTOP_MIN_WIDTH && !readNavPreference()) {
+				document.documentElement.classList.add(NAV_PRESET_CLASS);
+			}
+		} catch (e) { /* premier rendu d'origine */ }
+	}
+
+	function releaseNavigationPreset() {
+		try {
+			document.documentElement.classList.remove(NAV_PRESET_CLASS);
+		} catch (e) { /* rien à retirer */ }
+	}
+
 	function manageNavigation() {
 		try {
 			if (window.innerWidth < NAV_DESKTOP_MIN_WIDTH) {
+				releaseNavigationPreset();
 				return;
 			}
 			var wantOpen = readNavPreference();
 			var interacted = false;
 			var bus = null;
 			var observer = null;
+			window.setTimeout(releaseNavigationPreset, NAV_READY_WINDOW_MS);
 
 			var onInteract = function () {
 				interacted = true;
+				releaseNavigationPreset();
 			};
 			document.addEventListener('pointerdown', onInteract, { capture: true, once: true });
 			document.addEventListener('keydown', onInteract, { capture: true, once: true });
@@ -567,6 +595,8 @@
 				}
 				if (payload.open && !wantOpen && bus) {
 					bus.emit('toggle-navigation', { open: false });
+				} else if (!payload.open) {
+					releaseNavigationPreset();
 				}
 			};
 
@@ -972,6 +1002,7 @@
 	}
 
 	function start() {
+		presetNavigation();
 		if (document.readyState === 'loading') {
 			document.addEventListener('DOMContentLoaded', onDomReady);
 		} else {

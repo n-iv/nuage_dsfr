@@ -1138,6 +1138,19 @@ nav.dsfr-nav a.dsfr-nav__item--active:visited {
   }
 }
 
+html.dsfr-nav-closed body#body-user > :is(#content-vue, #content):not(.app-external) .app-navigation {
+  margin-inline-start: calc(-1 * min(300px, var(--app-navigation-max-width, 300px))) !important;
+  transition: none !important;
+}
+@media (min-width: 1848px) {
+  html.dsfr-nav-closed body#body-user > :is(#content-vue, #content):not(.app-external) .app-navigation .app-navigation__content {
+    transform: translateX(100%);
+    clip-path: inset(0 100% 0 0);
+    visibility: hidden;
+    transition: none !important;
+  }
+}
+
 /* ---- CONTENEUR DSFR : PANNEAUX DANS LES GOUTTIÈRES (essai 17/09/2026) ----
    Le cadre de contenu garde EXACTEMENT les marges du fr-container ; sur
    écran large, la navigation et le panneau latéral droit (partage,
