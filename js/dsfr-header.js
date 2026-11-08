@@ -48,7 +48,10 @@
 	 * ne peut pas couvrir cette nav : l'exclusion se fait ici, à la source
 	 * de la projection.
 	 */
-	var EXCLUDED_APP_PATHS = ['/apps/photos/'];
+	var EXCLUDED_APP_PATHS = [
+		'/apps/photos/',
+		'/apps/office/', // app « Office » livrée par NC 34, sans objet sur Nuage (08/11/2026)
+	];
 
 	/**
 	 * Bloc-marque typographique : drapeau, intitulé, devise : construits
@@ -566,6 +569,10 @@
 
 	function manageNavigation() {
 		try {
+			// NC 34 : les Paramètres ont aussi un NcAppNavigation (SettingsNavigation),
+			// traité comme les autres pages (repli mémorisé, tiroir en gouttière
+			// via body#body-settings dans css/dsfr.css) ; le bouton de dépli y
+			// était caché par le décalage de contenu, corrigé côté CSS.
 			if (window.innerWidth < NAV_DESKTOP_MIN_WIDTH) {
 				releaseNavigationPreset();
 				return;
@@ -963,6 +970,37 @@
 		return true;
 	}
 
+	/**
+	 * NC 34 : l'en-tête de la liste lit activeStore.activeView
+	 * .columns, et activeView est un shallowRef : notre push dans le tableau
+	 * de colonnes n'est pas observé. Au chargement DIRECT de la vue, le calcul
+	 * est figé avant notre décoration et « Expire le » manque (elle apparaît
+	 * après un changement de vue dans la page). On remplace l'objet View
+	 * actif par un jumeau (même _view, mêmes colonnes) : la navigation émet
+	 * updateActive avec un objet différent, le store et l'en-tête se
+	 * recalculent, la liste recharge une fois. Réservé au cas où la vue est
+	 * déjà active ; fail-open. Navigation.setActive prend l'id depuis
+	 * @nextcloud/files 4.1 (NC 34) ; en 33 (4.0, objet) le problème n'existe
+	 * pas et rien n'est fait.
+	 */
+	function reactivateLinksView(scope, view) {
+		try {
+			var nav = scope.navigation;
+			if (!nav || !nav.active || nav.active.id !== LINKS_VIEW_ID) {
+				return;
+			}
+			var major = parseInt(String(window.OC && window.OC.config && window.OC.config.version || '0'), 10);
+			if (!(major >= 34) || typeof nav.remove !== 'function' || typeof nav.register !== 'function') {
+				return;
+			}
+			var View = view.constructor;
+			var twin = new View(view._view);
+			nav.remove(LINKS_VIEW_ID);
+			nav.register(twin);
+			nav.setActive(LINKS_VIEW_ID);
+		} catch (e) { /* colonne au prochain changement de vue */ }
+	}
+
 	function setupLinksView() {
 		try {
 			if (!document.body || document.body.id !== 'body-user') {
@@ -980,6 +1018,7 @@
 							var view = views.find(function (v) { return v && v.id === LINKS_VIEW_ID; });
 							if (view && decorateLinksView(view)) {
 								window.clearInterval(timer);
+								reactivateLinksView(scope, view);
 								return;
 							}
 						}
@@ -995,6 +1034,55 @@
 		} catch (e) { /* vue native */ }
 	}
 
+	/**
+	 * Ctrl+F : le cœur écoute keydown sur window (core/src/views/
+	 * UnifiedSearch.vue, onKeyDown), fait preventDefault et ouvre la
+	 * recherche unifiée partout, sauf sur des chemins codés en dur
+	 * (/apps/deck pour la recherche locale, /settings/users et
+	 * /settings/apps pour s'effacer, « TODO: Make this an API »). Deux cas
+	 * où ce n'est pas ce que l'usager attend :
+	 *  - un document est ouvert dans le visualiseur (Texte, PDF, images) :
+	 *    il attend la recherche du navigateur dans la page ;
+	 *  - Fichiers, dont le champ de recherche de la sidebar est projeté dans
+	 *    l'en-tête (Section 4bis) : il attend ce champ, celui qui filtre la
+	 *    liste, pas la fenêtre « Recherche unifiée » par-dessus.
+	 * Écouteur en capture sur window, donc servi avant celui du cœur
+	 * (bouillonnement). Visualiseur ouvert : on arrête l'événement SANS
+	 * preventDefault, le navigateur fait sa recherche native. Champ projeté
+	 * présent : on arrête l'événement, on annule la recherche native et on
+	 * met le focus dans le champ, contenu sélectionné pour être remplacé à
+	 * la frappe. Partout ailleurs, rien : recherche unifiée d'origine.
+	 * Collabora vit dans une iframe, ses touches n'arrivent pas ici.
+	 * Fail-open. [VERIF] apps/viewer : .viewer sur .modal-mask ;
+	 * NcAppNavigationSearch : div.app-navigation__search > … > input.
+	 */
+	function handleFindShortcut() {
+		try {
+			window.addEventListener('keydown', function (e) {
+				if (!e.ctrlKey || e.metaKey || e.altKey || e.shiftKey || (e.key !== 'f' && e.key !== 'F')) {
+					return;
+				}
+				if (document.querySelector('.modal-mask.viewer')) {
+					e.stopImmediatePropagation();
+					return;
+				}
+				if (!document.body || !document.body.classList.contains(SEARCH_PROJECTED_CLASS)) {
+					return;
+				}
+				var input = document.querySelector('#header div.app-navigation__search input');
+				if (!input) {
+					return;
+				}
+				e.preventDefault();
+				e.stopImmediatePropagation();
+				input.focus();
+				if (typeof input.select === 'function') {
+					input.select();
+				}
+			}, true);
+		} catch (e) { /* recherche unifiée d'origine */ }
+	}
+
 	function onDomReady() {
 		overrideTranslations();
 		manageNavigation();
@@ -1003,6 +1091,7 @@
 
 	function start() {
 		presetNavigation();
+		handleFindShortcut();
 		if (document.readyState === 'loading') {
 			document.addEventListener('DOMContentLoaded', onDomReady);
 		} else {

@@ -5,6 +5,11 @@
    cycle de vie distinct (ces sélecteurs, souvent positionnels, sont les
    premiers à casser aux montées de version : « Check this still works at
    every upgrade! »). Chargé en session uniquement (TemplateListener).
+   NC 34 : la page Paramètres est devenue une appli Vue
+   (#settings-app, main#app-content-vue, nav .app-navigation sans id) :
+   plus aucun #app-content ni #app-navigation. Les règles sont ancrées sur
+   body#body-settings et sur des ids stables (#account-property-*), valides
+   en 33 comme en 34.
    ========================================================================== */
 
 
@@ -20,7 +25,9 @@
 }
 
 /* Removes the photo app (menu d'icônes d'origine ; la nav textuelle
-   applique sa propre exclusion via EXCLUDED_APP_PATHS dans le JS) */
+   applique sa propre exclusion via EXCLUDED_APP_PATHS dans le JS).
+   NC 34 : le menu est un bouton « gaufre » + popover (.app-menu__waffle),
+   la règle nth-child ne vise plus rien ; celle sur le href couvre la grille. */
 #header .header-start .app-menu .app-menu__list .app-menu-entry:nth-child(2) {
   display:none;
 }
@@ -54,10 +61,28 @@
   TRASHBIN
 ***********/
 
-/* Prevents the user from permanently deleting files on his own */
-html.ng-csp body#body-user div#content-vue.content.app-files main#app-content-vue.app-content.no-snapper div.files-list div.files-list__thead-overlay div.files-list__column.files-list__row-actions-batch div.action-items.action-item--tertiary button.button-vue.button-vue--size-normal.button-vue--icon-and-text.button-vue--vue-secondary.action-item.action-item--single.files-list__row-actions-batch-delete,
-html.ng-csp body#body-user div#content-vue.content.app-files main#app-content-vue.app-content.no-snapper div.files-list__header button.files-list__header-actions.button-vue.button-vue--size-normal.button-vue--text-only.button-vue--vue-tertiary.button-vue--tertiary.action-item.action-item--single {
-  display:none;
+/* Prevents the user from permanently deleting files on his own : la
+   corbeille se vide seule, à l'échéance de la rétention (règle Nuage de
+   2024 : des usagers vidaient leur corbeille puis demandaient une
+   restauration impossible). Trois entrées, ancrées sur les attributs de
+   test de l'app files (data-cy-*, identiques en 33 et 34), à la place des
+   sélecteurs positionnels de 2024 : en 34 la barre de sélection a quitté
+   thead-overlay pour la cellule « tout sélectionner » et le lot était
+   réapparu ; l'entrée du menu « … » de chaque ligne n'avait jamais été
+   masquée.
+   - « Vider les fichiers supprimés » (en-tête de la liste) ;
+   - « Supprimer définitivement » en lot (barre de sélection, menu
+     « Actions » de débordement compris) ;
+   - « Supprimer définitivement » du menu « … » de chaque ligne.
+   Les menus sont détachés dans le body : la corbeille se reconnaît à son
+   bouton « Vider », seule vue qui le porte (body:has), donc l'action
+   « delete » de Fichiers (mise à la corbeille) reste visible.
+   Garde-fou d'interface, pas un verrou : WebDAV et les clients mobiles
+   purgent toujours. */
+html.ng-csp body#body-user button[data-cy-files-list-action="empty-trash"],
+html.ng-csp body#body-user:has(button[data-cy-files-list-action="empty-trash"]) [data-cy-files-list-selection-action="delete"],
+html.ng-csp body#body-user:has(button[data-cy-files-list-action="empty-trash"]) [data-cy-files-list-row-action="delete"] {
+  display: none !important;
 }
 
 /* Adds a warning for users to know files in their trashbin are purged
@@ -94,43 +119,41 @@ SETTINGS: PERSONAL INFO
 }
 
 /* Hides the profile visibility section */
-#app-content div.personal-settings-section,
-#app-content #personal-settings .personal-settings-setting-box.personal-settings-setting-box-profile {
+#body-settings div.personal-settings-section,
+#body-settings #personal-settings .personal-settings-setting-box.personal-settings-setting-box-profile {
   display:none;
 }
 
-/* Check this still works at every upgrade! */
-/* Keeps only full name, language, local, first day of the week, about */
-/*5 full name*/
-#app-content #personal-settings .personal-settings-setting-box:nth-child(6), /*pronouns*/
-#app-content #personal-settings .personal-settings-setting-box:nth-child(7), /*email*/
-#app-content #personal-settings .personal-settings-setting-box:nth-child(8), /*phone number*/
-#app-content #personal-settings .personal-settings-setting-box:nth-child(9), /*location*/
-#app-content #personal-settings .personal-settings-setting-box:nth-child(10), /*birthday*/
-/*11 language*/
-/*12 local*/
-/*13 first day*/
-/*14 time zone*/
-#app-content #personal-settings .personal-settings-setting-box:nth-child(15), /*website*/
-#app-content #personal-settings .personal-settings-setting-box:nth-child(16), /*x*/
-#app-content #personal-settings .personal-settings-setting-box:nth-child(17), /*bluesky*/
-#app-content #personal-settings .personal-settings-setting-box:nth-child(18), /*fediverse*/
-#app-content #personal-settings .personal-settings-setting-box:nth-child(19), /*organization*/
-#app-content #personal-settings .personal-settings-setting-box:nth-child(20), /*role */
-#app-content #personal-settings .personal-settings-setting-box:nth-child(21) /*title*/{
+/* Keeps only full name, language, locale, first day of the week, time
+   zone, about. Ancré sur l'id stable de chaque propriété
+   (#account-property-<nom>, composants Vue de settings, identiques en 33 et
+   34) : les index nth-child ont glissé de deux à la 34 (Profil=1, Nom=3),
+   plus aucun positionnel ici. */
+#body-settings #personal-settings .personal-settings-setting-box:has(#account-property-pronouns),
+#body-settings #personal-settings .personal-settings-setting-box:has(#account-property-email),
+#body-settings #personal-settings .personal-settings-setting-box:has(#account-property-phone),
+#body-settings #personal-settings .personal-settings-setting-box:has(#account-property-address),
+#body-settings #personal-settings .personal-settings-setting-box:has(#account-property-birthdate),
+#body-settings #personal-settings .personal-settings-setting-box:has(#account-property-website),
+#body-settings #personal-settings .personal-settings-setting-box:has(#account-property-twitter),
+#body-settings #personal-settings .personal-settings-setting-box:has(#account-property-bluesky),
+#body-settings #personal-settings .personal-settings-setting-box:has(#account-property-fediverse),
+#body-settings #personal-settings .personal-settings-setting-box:has(#account-property-organisation),
+#body-settings #personal-settings .personal-settings-setting-box:has(#account-property-role),
+#body-settings #personal-settings .personal-settings-setting-box:has(#account-property-headline) {
   display:none;
 }
 
 /* Hides the buttons to choose if shared locally or to all the federation */
-#app-content #personal-settings #vue-avatar-section .headerbar-label .federation-control,
-#app-content #personal-settings .personal-settings-setting-box .headerbar-label .federation-control,
-#app-content #personal-settings .personal-settings-setting-box .headerbar-label .button-vue__wrapper,
-#app-content #personal-settings .personal-settings-setting-box .checkbox-container {
+#body-settings #personal-settings #vue-avatar-section .headerbar-label .federation-control,
+#body-settings #personal-settings .personal-settings-setting-box .headerbar-label .federation-control,
+#body-settings #personal-settings .personal-settings-setting-box .headerbar-label .button-vue__wrapper,
+#body-settings #personal-settings .personal-settings-setting-box .checkbox-container {
   display:none;
 }
 
 /* Hides the warning concerning the version */
-#body-settings #content.app-settings #app-content .section .warning {
+#body-settings .section .warning {
   display:none;
 }
 
@@ -140,18 +163,18 @@ SETTINGS: SECURITY
 *********************/
 
 /* Hides the section to change the password */
-#body-settings #app-content .settings-section:has(input[type="password"]) {
+#body-settings .settings-section:has(input[type="password"]) {
   display: none;
 }
 
 /* Check this still works at every upgrade! */
 /* Hides the 2FA settings */
-#content #app-content #two-factor-auth {
+#body-settings #two-factor-auth {
   display:none;
 }
 
 /* Hides the passwordless authentication */
-#content #app-content #security-webauthn {
+#body-settings #security-webauthn {
   display:none;
 }
 
@@ -167,7 +190,7 @@ SETTINGS: NOTIFICATIONS
    nouveau wrapper de la section ; l'ancien crochet settings-section--limit-width
    n'est plus posé par NcSettingsSection (cause de la casse v33). Pas d'ancrage
    sur l'id du label (checkbox-radio-switch-nc-vue-N-label) : N est auto-généré. */
-#app-content #notifications-user-settings .settings-section span.checkbox-radio-switch.checkbox-radio-switch-checkbox:first-of-type + span.checkbox-radio-switch.checkbox-radio-switch-checkbox {
+#body-settings #notifications-user-settings .settings-section span.checkbox-radio-switch.checkbox-radio-switch-checkbox:first-of-type + span.checkbox-radio-switch.checkbox-radio-switch-checkbox {
   display: none;
 }
 
@@ -196,12 +219,12 @@ SETTINGS: SHARING
    Fédéré »). NC33 : NcSettingsSection ne pose plus settings-section--limit-width
    (même cause que le correctif notifications ci-dessus) — aucun .social-button
    n'a d'usage sur Nuage, le sélecteur large est sans risque. */
-#content #app-content .settings-section .social-button {
+#body-settings .settings-section .social-button {
   display: none;
 }
 
 /* Hides the property transfer */
-#body-settings #content.app-settings #app-content #files-personal-settings.section {
+#body-settings #files-personal-settings.section {
   display: none;
 }
 
@@ -210,8 +233,10 @@ SETTINGS: SHARING
 SETTINGS: AVAILABILITY
 *************************/
 
-/* Hides the whole section */
-#app-navigation ul li a[href*="/index.php/settings/user/availability"] {
+/* Hides the whole section. Entrées de nav : <li><a> en 33 (#app-navigation),
+   li.app-navigation-entry-wrapper > div > a en 34 (.app-navigation) : on
+   masque le li qui contient le lien, sous l'une ou l'autre nav. */
+#body-settings :is(#app-navigation, .app-navigation) li:has(a[href*="/index.php/settings/user/availability"]) {
   display: none;
 }
 
@@ -221,7 +246,7 @@ SETTINGS: FLOW
 *****************/
 
 /* Hides the whole section */
-#app-navigation ul li a[href*="index.php/settings/user/workflow"] {
+#body-settings :is(#app-navigation, .app-navigation) li:has(a[href*="index.php/settings/user/workflow"]) {
   display: none;
 }
 
@@ -231,7 +256,7 @@ SETTINGS: OFFICE
 *******************/
 
 /* Hides the whole section */
-#app-navigation ul li a[href*="index.php/settings/user/richdocuments"] {
+#body-settings :is(#app-navigation, .app-navigation) li:has(a[href*="index.php/settings/user/richdocuments"]) {
   display: none;
 }
 
@@ -241,7 +266,7 @@ SETTINGS: ASSISTANT
 **********************/
 
 /* Hides the whole section (app 'assistant', personal section id 'ai') */
-#app-navigation ul li a[href*="/index.php/settings/user/ai"] {
+#body-settings :is(#app-navigation, .app-navigation) li:has(a[href*="/index.php/settings/user/ai"]) {
   display: none;
 }
 
@@ -252,8 +277,8 @@ SETTINGS: PRIVACY
 
 /* Check this still works at every upgrade! */
 /* Hide 'Who has access to your data?' section */
-#body-settings #content.app-settings #app-content .settings-section.access.settings-section--limit-width,
-#app-content div#themes:nth-child(4){
+#body-settings .settings-section.access.settings-section--limit-width,
+#body-settings div#themes:nth-child(4){
   display:none;
 }
 
@@ -267,18 +292,18 @@ g#fr {
 SETTINGS: APPEARANCE
 ********************/
 
-#body-settings #app-content .settings-section.background {
+#body-settings .settings-section.background {
   display: none;
 }
 
-#body-settings #app-content .settings-section:has([class*="userPrimaryColor"]) {
+#body-settings .settings-section:has([class*="userPrimaryColor"]) {
   display: none;
 }
 
 /* Hides the two intro paragraphs of the Appearance section (WCAG pitch and
    Nextcloud issue tracker / design team links, not relevant on Nuage). Direct
    children only: theme explanations live deeper (.theming__preview-*). */
-#body-settings #app-content .settings-section.theming > p {
+#body-settings .settings-section.theming > p {
   display: none;
 }
 
@@ -286,7 +311,7 @@ SETTINGS: APPEARANCE
 /* Hides the "Navigation bar settings" (app order) section. Two hooks on the
    same section (CSS-modules class + data-test-id) so one survives a refactor
    of the other. UI removal only: the app-order API stays served. */
-#body-settings #app-content .settings-section:has([class*="userSectionAppMenu"]),
-#body-settings #app-content .settings-section:has([data-test-id="btn-apporder-reset"]) {
+#body-settings .settings-section:has([class*="userSectionAppMenu"]),
+#body-settings .settings-section:has([data-test-id="btn-apporder-reset"]) {
   display: none;
 }

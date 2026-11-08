@@ -810,6 +810,10 @@ nav.dsfr-nav a.dsfr-nav__item--active:visited {
   body.dsfr-header-ready #header .header-end .header-menu__wrapper {
     inset-block-start: calc(var(--dsfr-row1-height) - (var(--dsfr-row1-height) - 5.625rem) / 2) !important;
     inset-inline-end: var(--dsfr-container-margin) !important;
+    /* NC 34 : le panneau est peint en --color-main-background-blur (rgba .8)
+       sans backdrop-filter, la page se lisait à travers (constaté sur les
+       notifications, 08/11/2026). Fond plein, couleur du thème. */
+    background-color: var(--dsfr-bg-default) !important;
   }
 }
 
@@ -1064,6 +1068,92 @@ nav.dsfr-nav a.dsfr-nav__item--active:visited {
   }
 }
 
+/* ---- RECHERCHE UNIFIÉE, MARKUP NC 34 ----
+   En 34 le déclencheur n'est plus div#unified-search.header-menu >
+   button.header-menu__trigger mais .unified-search-menu >
+   search.unified-search-input > button.unified-search-input__button
+   (loupe .unified-search-input__icon + libellé .unified-search-input__label),
+   que NC pose en absolu au centre de l'en-tête (width clamp(200px, 35vw,
+   600px), pointer-events: none sur le conteneur). Sans ces règles il ne
+   restait qu'une loupe nue de 24px sous « Mon compte » sur toute page sans
+   recherche locale (Activité, Annonces, Paramètres). Même barre fr-search-bar
+   que le bloc 33 ci-dessus, dans la case réservée de la colonne droite ; le
+   libellé natif (long) reste lu par les lecteurs d'écran, le faux
+   placeholder « Rechercher » est peint en ::before. Sans effet en 33
+   (classes absentes).
+@media (min-width: 1024px) {
+  body.dsfr-header-ready #header .header-end .unified-search-menu search.unified-search-input {
+    position: static !important;
+    inset: auto !important;
+    margin: 0 !important;
+    display: flex !important;
+    align-items: stretch !important;
+    width: var(--dsfr-search-slot) !important;
+    max-width: 100% !important;
+    height: 2.5rem !important;
+    pointer-events: auto !important;
+  }
+  body.dsfr-header-ready #header .header-end .unified-search-input__button {
+    display: flex !important;
+    flex-direction: row-reverse !important; /* loupe à droite, libellé à gauche */
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    gap: 0 !important;
+    width: 100% !important;
+    height: 2.5rem !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    overflow: hidden !important;
+    background: var(--dsfr-bg-contrast) !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    border-radius: 0.25rem 0.25rem 0 0 !important;
+    box-shadow: inset 0 -2px 0 0 var(--dsfr-border-strong) !important;
+    color: var(--dsfr-text-mention) !important;
+    text-align: start !important;
+  }
+  body.dsfr-header-ready #header .header-end .unified-search-input__label {
+    flex: 1 !important;
+    display: flex !important;
+    align-items: center !important;
+    min-width: 0 !important;
+    padding-inline: 1rem !important;
+    font-size: 0 !important; /* libellé natif gardé pour l'accessibilité, invisible */
+    color: var(--dsfr-text-mention) !important;
+  }
+  body.dsfr-header-ready #header .header-end .unified-search-input__label::before {
+    content: 'Rechercher' / '';
+    font-size: 1rem;
+    font-style: italic;
+    font-weight: 400;
+    color: var(--dsfr-text-mention);
+  }
+  /* Carré Bleu France : la loupe passe en blanc via currentColor */
+  body.dsfr-header-ready #header .header-end .unified-search-input__icon {
+    flex: 0 0 2.5rem !important;
+    width: 2.5rem !important;
+    height: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: var(--dsfr-primary) !important;
+    border-radius: 0 0.25rem 0 0 !important;
+    color: var(--dsfr-on-primary) !important;
+  }
+  body.dsfr-header-ready #header .header-end .unified-search-input__icon svg {
+    color: var(--dsfr-on-primary) !important;
+    fill: currentColor !important;
+  }
+  body.dsfr-header-ready #header .header-end .unified-search-input__button:hover,
+  body.dsfr-header-ready #header .header-end .unified-search-input__button:focus-visible {
+    background: var(--dsfr-bg-contrast) !important;
+  }
+  body.dsfr-header-ready #header .header-end .unified-search-input__button:hover .unified-search-input__icon {
+    background: var(--dsfr-primary-hover) !important;
+  }
+}
+
 /* ---- CONTENEUR DSFR (rangées 1 et 2) ----
    Fond pleine largeur, contenu borné : marges latérales du fr-container.
    PAS de garde dsfr-header-ready ici : la classe n'arrive qu'après le
@@ -1090,7 +1180,8 @@ nav.dsfr-nav a.dsfr-nav__item--active:visited {
    déjà conteneurisé : la classe app-<id> posée par le serveur sur le
    conteneur de contenu (layout.user.php) — l'app external (« Aide en
    ligne », iframe vers un site DSFR portant déjà son fr-container) est
-   exclue et reste pleine largeur. Bornage en largeur seulement : la
+   exclue des règles communes et calée à part (voir plus bas, « App
+   external »). Bornage en largeur seulement : la
    variable native --body-container-margin borde aussi le BAS du contenu
    (via --body-height, cf. Section 2d) et laisserait une bande vide sous
    la page sur écran large. Dans la corbeille, les 8 colonnes ne tiennent
@@ -1136,14 +1227,39 @@ nav.dsfr-nav a.dsfr-nav__item--active:visited {
     height: 100% !important;
     margin: 0 !important;
   }
+  /* NC 34 : les Paramètres sont une appli Vue (SettingsApp) dont
+     le module CSS pose #content:has(._settingsApp) { margin: 0; height: 100% } ;
+     le décalage sous l'en-tête n'était plus porté que par le #content-vue
+     imbriqué, rendu au flux et démarginé ci-dessus : le contenu passait sous
+     le bandeau (titre et bouton de dépli de la nav cachés) et débordait en
+     bas (barre horizontale). Le parent reprend la géométrie native. Mêmes
+     valeurs qu'en 33, donc sans effet là-bas. [VERIF] apps/settings/src/views/SettingsApp.vue */
+  body#body-settings > #content:not(.app-external) {
+    margin-top: var(--header-height) !important;
+    height: var(--body-height) !important;
+  }
+  /* App external (Tutoriels, Assistance : iframe vers un site DSFR qui
+     porte son propre fr-container). Laissée pleine largeur, l'iframe
+     calculait ses marges sur 1904px (viewport moins les 8px de body de
+     chaque côté) et sur sa propre barre de défilement : son contenu
+     débordait de ~20px de part et d'autre du conteneur (constaté le
+     08/11/2026). L'iframe est calée sur le conteneur élargi d'1rem de
+     chaque côté : à cette largeur (< 78rem) le fr-container intérieur
+     prend sa marge minimale d'1rem, et son contenu s'aligne au pixel à
+     gauche ; à droite, la barre de défilement de l'iframe occupe la
+     gouttière. */
+  body#body-user > #content.app-external {
+    margin-inline: calc(var(--dsfr-container-margin) - 1rem) !important;
+    width: calc(100% - (var(--dsfr-container-margin) - 1rem) * 2) !important;
+  }
 }
 
-html.dsfr-nav-closed body#body-user > :is(#content-vue, #content):not(.app-external) .app-navigation {
+html.dsfr-nav-closed body:is(#body-user, #body-settings) > :is(#content-vue, #content):not(.app-external) .app-navigation {
   margin-inline-start: calc(-1 * min(300px, var(--app-navigation-max-width, 300px))) !important;
   transition: none !important;
 }
 @media (min-width: 1848px) {
-  html.dsfr-nav-closed body#body-user > :is(#content-vue, #content):not(.app-external) .app-navigation .app-navigation__content {
+  html.dsfr-nav-closed body:is(#body-user, #body-settings) > :is(#content-vue, #content):not(.app-external) .app-navigation .app-navigation__content {
     transform: translateX(100%);
     clip-path: inset(0 100% 0 0);
     visibility: hidden;
@@ -1196,13 +1312,15 @@ html.dsfr-nav-closed body#body-user > :is(#content-vue, #content):not(.app-exter
   /* Deux gabarits (cf. « Conteneur DSFR : contenu applicatif ») : racine
      Vue seule (Fichiers) ou #content serveur (overflow:clip) avec
      #content-vue imbriqué (Activité, Annonces) : les deux niveaux
-     doivent laisser déborder. */
-  body#body-user > #content-vue:not(.app-external),
-  body#body-user > #content:not(.app-external),
-  body#body-user > #content:not(.app-external) #content-vue {
+     doivent laisser déborder. body#body-settings depuis NC 34 :
+     les Paramètres ont un NcAppNavigation comme les autres pages, même
+     tiroir, même repli mémorisé. */
+  body:is(#body-user, #body-settings) > #content-vue:not(.app-external),
+  body:is(#body-user, #body-settings) > #content:not(.app-external),
+  body:is(#body-user, #body-settings) > #content:not(.app-external) #content-vue {
     overflow: visible !important;
   }
-  body#body-user > :is(#content-vue, #content):not(.app-external) .app-navigation {
+  body:is(#body-user, #body-settings) > :is(#content-vue, #content):not(.app-external) .app-navigation {
     margin-inline-start: -300px !important;
     background: transparent !important;
     backdrop-filter: none !important;
@@ -1216,7 +1334,7 @@ html.dsfr-nav-closed body#body-user > :is(#content-vue, #content):not(.app-exter
      est frère du <nav>, il reste peint. visibility transite aussi :
      retirée en fin d'animation à la fermeture, rendue aussitôt à
      l'ouverture (sortie de la tabulation une fois replié). */
-  body#body-user > :is(#content-vue, #content):not(.app-external) .app-navigation .app-navigation__content {
+  body:is(#body-user, #body-settings) > :is(#content-vue, #content):not(.app-external) .app-navigation .app-navigation__content {
     transform: translateX(0);
     clip-path: inset(0);
     transition: transform var(--animation-quick), clip-path var(--animation-quick), visibility var(--animation-quick);
@@ -1225,12 +1343,12 @@ html.dsfr-nav-closed body#body-user > :is(#content-vue, #content):not(.app-exter
      @nextcloud/vue embarquée par Activité pose .app-navigation--closed :
      les deux. Replié : glissé sous le contenu (à droite) et rogné par la
      droite, seul son bord gauche émerge en premier à l'ouverture. */
-  body#body-user > :is(#content-vue, #content):not(.app-external) .app-navigation:is(.app-navigation--close, .app-navigation--closed) .app-navigation__content {
+  body:is(#body-user, #body-settings) > :is(#content-vue, #content):not(.app-external) .app-navigation:is(.app-navigation--close, .app-navigation--closed) .app-navigation__content {
     transform: translateX(100%);
     clip-path: inset(0 100% 0 0);
     visibility: hidden;
   }
-  body#body-user > :is(#content-vue, #content):not(.app-external) .app-sidebar {
+  body:is(#body-user, #body-settings) > :is(#content-vue, #content):not(.app-external) .app-sidebar {
     --app-sidebar-width: min(clamp(300px, 27vw, 500px), var(--dsfr-container-margin));
     margin-inline-end: calc(-1 * var(--app-sidebar-width)) !important;
     transform: translateX(0);
@@ -1239,8 +1357,8 @@ html.dsfr-nav-closed body#body-user > :is(#content-vue, #content):not(.app-exter
   }
   /* Fermé : glissé sous le contenu (à gauche) et rogné par la gauche,
      son bord droit émerge en premier à l'ouverture. */
-  body#body-user > :is(#content-vue, #content):not(.app-external) .app-sidebar.slide-right-enter,
-  body#body-user > :is(#content-vue, #content):not(.app-external) .app-sidebar.slide-right-leave-to {
+  body:is(#body-user, #body-settings) > :is(#content-vue, #content):not(.app-external) .app-sidebar.slide-right-enter,
+  body:is(#body-user, #body-settings) > :is(#content-vue, #content):not(.app-external) .app-sidebar.slide-right-leave-to {
     transform: translateX(-100%);
     clip-path: inset(0 0 0 100%);
   }
