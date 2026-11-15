@@ -1080,7 +1080,7 @@ nav.dsfr-nav a.dsfr-nav__item--active:visited {
    que le bloc 33 ci-dessus, dans la case réservée de la colonne droite ; le
    libellé natif (long) reste lu par les lecteurs d'écran, le faux
    placeholder « Rechercher » est peint en ::before. Sans effet en 33
-   (classes absentes).
+   (classes absentes). */
 @media (min-width: 1024px) {
   body.dsfr-header-ready #header .header-end .unified-search-menu search.unified-search-input {
     position: static !important;
