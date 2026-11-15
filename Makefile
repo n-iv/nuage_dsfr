@@ -5,7 +5,7 @@
 #   make deploy-local  -> copie l'archive dans ../appli/apps/ (pose Ansible,
 #                         rôle nc-apps-local, version épinglée dans pinned_apps)
 #   make sign          -> signature appstore (clé ~/.nextcloud/certificates/)
-#   make lint          -> php -l sur les sources
+#   make lint          -> php -l sur les sources, forme des feuilles CSS
 #
 # La version est celle de appinfo/info.xml : la bumper là, nulle part ailleurs.
 
@@ -26,6 +26,7 @@ version:
 
 lint:
 	@for f in $$(find lib -name '*.php'); do php -l $$f >/dev/null || exit 1; done
+	@python3 tools/lint-css.py css/*.css
 	@echo "lint OK"
 
 dist: clean lint
@@ -38,6 +39,7 @@ dist: clean lint
 		--exclude=/Makefile \
 		--exclude=/publiccode.yml \
 		--exclude=/docs \
+		--exclude=/tools \
 		./ $(stage_dir)/$(app_name)/
 	tar -czf $(archive) -C $(stage_dir) $(app_name)
 	rm -rf $(stage_dir)
