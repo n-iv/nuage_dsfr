@@ -189,14 +189,20 @@ SETTINGS: NOTIFICATIONS
    notification) reste visible. NC33 : ancré sur #notifications-user-settings,
    nouveau wrapper de la section ; l'ancien crochet settings-section--limit-width
    n'est plus posé par NcSettingsSection (cause de la casse v33). Pas d'ancrage
-   sur l'id du label (checkbox-radio-switch-nc-vue-N-label) : N est auto-généré. */
-#body-settings #notifications-user-settings .settings-section span.checkbox-radio-switch.checkbox-radio-switch-checkbox:first-of-type + span.checkbox-radio-switch.checkbox-radio-switch-checkbox {
+   sur l'id du label (checkbox-radio-switch-nc-vue-N-label) : N est auto-généré.
+   NC 34 : les deux cases sont devenues des interrupteurs (type="switch",
+   classe checkbox-radio-switch-switch au lieu de -checkbox). */
+#body-settings #notifications-user-settings .settings-section span.checkbox-radio-switch:first-of-type + span.checkbox-radio-switch {
   display: none;
 }
 
 /* Check this still works at every upgrade! */
-/* Hides the calendar, contact and tasks sections from the activity notifications (apps not installed) */
-table.activitysettings tbody:nth-child(4){
+/* Hides the calendar, contact and tasks sections from the activity
+   notifications (apps not installed). Ancré sur les ids des cases
+   (#<activité>_<méthode>, ActivityGrid.vue, identiques en 33 et 34) : en 34
+   le groupe est au 2e rang et l'ancien tbody:nth-child(4) masquait
+   « Partage » à sa place. */
+table.activitysettings tbody:has(#calendar_email, #calendar_event_email, #calendar_todo_email, #contacts_email) {
   display: none;
 }
 
@@ -223,8 +229,13 @@ SETTINGS: SHARING
   display: none;
 }
 
-/* Hides the property transfer */
-#body-settings #files-personal-settings.section {
+/* Hides the property transfer. NC 34 : le montage Vue remplace
+   #files-personal-settings par sa racine (une .settings-section « Fichiers »
+   sans id, qui ne contient que le transfert) : elle se reconnaît aux classes
+   de module du composant (_transferOwnership__*, suffixe de build variable,
+   d'où le [class*=]). L'ancienne règle reste pour la 33. */
+#body-settings #files-personal-settings.section,
+#body-settings .settings-section:has([class*="_transferOwnership__"]) {
   display: none;
 }
 
@@ -276,8 +287,10 @@ SETTINGS: PRIVACY
 ********************/
 
 /* Check this still works at every upgrade! */
-/* Hide 'Who has access to your data?' section */
-#body-settings .settings-section.access.settings-section--limit-width,
+/* Hide 'Who has access to your data?' section. NC 34 : la section ne porte
+   plus settings-section--limit-width (même cause qu'en Notifications et
+   Partage) ; .access suffit, en 33 comme en 34. */
+#body-settings .settings-section.access,
 #body-settings div#themes:nth-child(4){
   display:none;
 }
